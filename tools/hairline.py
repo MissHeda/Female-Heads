@@ -11,7 +11,7 @@ TOP_Z = 0.8055             # skull top without hair (vanilla skull top is 0.809)
 
 # hairline: height above the eye centre as a function of the angle around the vertical axis (0 front, pi back)
 _T = np.array([0.00, 0.40, 0.75, 1.00, 1.20, 1.36, 1.50, 1.68, 1.88, 2.05, 2.25, 2.60, np.pi])
-_H = np.array([0.052, 0.051, 0.046, 0.036, 0.020, 0.010, 0.016, 0.022, 0.014, -0.012, -0.045, -0.070, -0.076])
+_H = np.array([0.047, 0.046, 0.042, 0.034, 0.020, 0.010, 0.016, 0.022, 0.014, -0.014, -0.052, -0.088, -0.098])
 
 
 def smooth(e0, e1, x):

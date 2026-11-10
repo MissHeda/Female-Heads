@@ -5,7 +5,7 @@
   The vanilla face animations are heavily exaggerated and meant for small weights (lips 0.2-0.3, lids 0.1,
   brows 0.05...), with the rest of every face vertex on Head. The caps below come from replaying the vanilla
   RTMs on a vanilla-compatible head (tools/simulate.py); with full weights the face would tear apart.
-- LODs 1/2/4 (visual), 10000 (shadow volume, closed), 1e15 (memory points).
+- LODs 1-5 (visual, each about half of the one before), 10000 (shadow volume, closed), 1e15 (memory points).
 - MLOD conventions (checked against BI heads): cross(p1-p0, p2-p0) and stored normals point inwards,
   UV origin top left.
 usage (repo root): python -I tools/build_p3d.py
@@ -259,7 +259,7 @@ def memory_lod():
 
 def main():
     blobs = []
-    for name, res in (("lod1", 1.0), ("lod2", 2.0), ("lod3", 4.0)):
+    for name, res in (("lod1", 1.0), ("lod2", 2.0), ("lod3", 3.0), ("lod4", 4.0), ("lod5", 5.0)):
         b, nv, nf, W = visual_lod(name, res); blobs.append(b); print(f"LOD {res:g}: {nv} points, {nf} faces")
         if name == "lod1":
             mx = defaultdict(float); cnt = defaultdict(int)

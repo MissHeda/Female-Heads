@@ -37,7 +37,7 @@ def apply(ob, mod):
 
 
 dump(head, "lod1")
-for name, ratio in (("lod2", 0.5), ("lod3", 0.22)):
+for name, ratio in (("lod2", 0.5), ("lod3", 0.25), ("lod4", 0.12), ("lod5", 0.055)):
     ob = copy("FH_tmp_" + name)
     m = ob.modifiers.new("d", "DECIMATE"); m.ratio = ratio; m.use_symmetry = True; m.symmetry_axis = "X"
     dump(ob, name); bpy.data.meshes.remove(ob.data)
@@ -48,16 +48,9 @@ b = bmesh.new(); b.from_mesh(me); dl = b.verts.layers.deform.active
 drop = {head.vertex_groups[n].index for n in ("FH_p_eye", "FH_p_tongue", "FH_p_teeth", "FH_p_cavity") if n in head.vertex_groups}
 bmesh.ops.delete(b, geom=[v for v in b.verts if any(k in drop and v[dl][k] > 0.5 for k in v[dl].keys())], context="VERTS")
 b.to_mesh(me); b.free()
-r = ob.modifiers.new("r", "REMESH"); r.mode = "VOXEL"; r.voxel_size = 0.005; apply(ob, r)
-d = ob.modifiers.new("d", "DECIMATE"); d.ratio = min(1.0, 520 / max(1, sum(len(p.vertices) - 2 for p in ob.data.polygons))); apply(ob, d)
-# a shadow volume must be closed: drop anything decimation left non-manifold and fill the holes
-b = bmesh.new(); b.from_mesh(ob.data)
-for _ in range(4):
-    bad = [e for e in b.edges if not e.is_manifold]
-    if not bad: break
-    bmesh.ops.delete(b, geom=list({f for e in bad for f in e.link_faces if len(e.link_faces) > 2}), context="FACES")
-    bmesh.ops.holes_fill(b, edges=[e for e in b.edges if e.is_boundary], sides=0)
-    bmesh.ops.triangulate(b, faces=b.faces[:])
+# a shadow volume must be closed: a coarse voxel shell is manifold by construction (decimating it is not)
+r = ob.modifiers.new("r", "REMESH"); r.mode = "VOXEL"; r.voxel_size = 0.011; r.use_smooth_shade = False; apply(ob, r)
+b = bmesh.new(); b.from_mesh(ob.data); bmesh.ops.triangulate(b, faces=b.faces[:])
 print("shadow non-manifold edges", sum(1 for e in b.edges if not e.is_manifold))
 bmesh.ops.recalc_face_normals(b, faces=b.faces[:]); b.to_mesh(ob.data); b.free()
 # stay inside the visual model so the head does not shadow itself

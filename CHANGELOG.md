@@ -4,4 +4,5 @@
 
 - First female head: pulled-back hair with a low bun, light and dark skin, own wound textures.
 - Skinned to the vanilla face bones: talking, blinking and expressions work like on vanilla heads.
-- Fits vanilla helmets, glasses and collars: eye centres, skull size and neck width follow the vanilla head.
+- High-detail model (16.6k triangles, five LODs) that lies inside the vanilla head: nothing shows through vanilla helmets.
+- Low bun at the nape, below the rim of the vanilla helmets.

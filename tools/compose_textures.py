@@ -83,11 +83,11 @@ fine = ring_strands(psi, rho, 3, 60, 620, 70)             # single strands
 clump = ring_strands(psi, rho, 4, 6, 40, 14)              # locks
 along = sine_noise(P, 55.0, 5, 6)
 irr = sine_noise(P, 700.0, 8, 24, (0.3, 3.0))             # irregular, so the edge is not a comb
-jit = (clump * 0.4 + irr * 0.6) * 0.0022
-hair = hairline.hair_mask(P, soft=0.009, jitter=jit) * (1 - np.clip(EAR * 4, 0, 1)) * skinp
-# wispy edge: single strands reach a little past the solid hair
-edge = np.clip(hair * (0.72 + 0.22 * (fine * 0.5 + 0.5) + 0.22 * (irr * 0.5 + 0.5)), 0, 1)
-hair_a = np.where(hair > 0.97, 1.0, smooth(0.15, 0.85, edge))
+jit = (clump * 0.4 + irr * 0.6) * 0.0014
+hair = hairline.hair_mask(P, soft=0.016, jitter=jit) * (1 - np.clip(EAR * 4, 0, 1)) * skinp
+# soft hairline: over the last centimetre the hair thins out into single fine strands (baby hair), no hard edge
+dens = np.clip(0.5 + 0.45 * fine + 0.25 * irr, 0, 1)
+hair_a = np.clip(hair ** 0.8 * (1 - (1 - hair) * 1.15 * (1 - dens)), 0, 1)
 # bun: coil pattern in its own disc UV
 bu = SRC[..., 0] - 0.5; bv = SRC[..., 1] - 0.5
 brad = np.hypot(bu, bv) / 0.48 * 1.06; bang = np.arctan2(bv, bu)
@@ -130,21 +130,12 @@ freckle = smooth(1.05, 1.55, fr) * np.exp(-((z - (EYE[2] - 0.022)) / 0.030) ** 2
 undereye = np.exp(-(((ax - EYE[0]) / 0.016) ** 2 + ((z - (EYE[2] - 0.016)) / 0.007) ** 2)) * front * skinp
 nosetip = np.exp(-((x / 0.012) ** 2 + ((z - (EYE[2] - 0.040)) / 0.012) ** 2)) * front * skinp
 
-# teeth: procedural strip (u along the arch, v across gum -> edge -> inside)
-tu, tv = SRC[..., 0], SRC[..., 1]
-band = np.where(tv < 0.15, tv, tv - 0.16) / 0.14
-tooth = tu * 14.0; gap = np.abs(tooth - np.rint(tooth))
-enamel = np.array([0.84, 0.81, 0.73]); gum = np.array([0.58, 0.27, 0.28])
-tcol = lerp(np.broadcast_to(gum, P.shape), np.broadcast_to(enamel, P.shape), smooth(0.10, 0.22, band) * smooth(1.0, 0.80, band))
-tcol = tcol * (1 - 0.45 * smooth(0.05, 0.0, gap) * smooth(0.12, 0.3, band))[..., None]
-tcol = tcol * (0.88 + 0.12 * np.cos((tooth - np.floor(tooth) - 0.5) * 2.2))[..., None]
-tcol = tcol * np.where(band > 0.76, 0.55, 1.0)[..., None]
-
 
 def compose(tone, cfg, detail=None):
     skin_img = srgb(os.path.join(MPFB, "skins", cfg["skin"][0], cfg["skin"][1]))
     eye_img = srgb(os.path.join(MPFB, "eyes", "materials", cfg["eye"]))
     tongue_img = srgb(os.path.join(MPFB, "tongue", "tongue01", "tongue01_diffuse.png"))
+    teeth_img = srgb(os.path.join(MPFB, "teeth", "teeth_base", "teeth.png"))
     col = sample(skin_img, SRC)
     if detail is not None:
         col = np.where(skinp[..., None], detail, col)
@@ -175,7 +166,13 @@ def compose(tone, cfg, detail=None):
     ey = (gy + (ey - gy) * cfg.get("eyesat", 0.7)) * np.array([0.93, 0.92, 0.92])       # calmer iris, off-white sclera
     col = np.where(is_["eye"][..., None], ey, col)
     col = np.where(is_["tongue"][..., None], sample(tongue_img, SRC) * 0.9, col)
-    col = np.where(is_["teeth"][..., None], tcol, col)
+    # teeth: the source image is grey with a black background; use it only to tell gum from tooth and for shading
+    ts = sample(teeth_img, SRC); lum = ts.max(-1); red = ts[..., 0] - (ts[..., 1] + ts[..., 2]) / 2
+    gumw = smooth(0.06, 0.16, red)[..., None]
+    shade = np.where(lum < 0.12, 0.8, np.clip(lum / 0.75, 0.55, 1.0))[..., None]
+    tooth = np.array([0.88, 0.85, 0.78]) * (0.80 + 0.20 * shade)
+    gumc = np.array([0.66, 0.31, 0.32]) * (0.65 + 0.45 * shade)
+    col = np.where(is_["teeth"][..., None], tooth * (1 - gumw) + gumc * gumw, col)
     col = np.where(is_["cavity"][..., None], col * 0.75, col)
     # hair: dark roots and locks, lighter single strands, a broad sheen where the skull faces up/back
     hc = lerp(np.broadcast_to(base, P.shape), np.broadcast_to(tip, P.shape), strand ** 1.6)
@@ -196,7 +193,6 @@ def others():
     flat = ~(skinp | is_["cavity"]); n[flat] = (0.5, 0.5, 1.0)
     n = lerp(n, np.broadcast_to(np.array([0.5, 0.5, 1.0]), n.shape), hair_a * 0.85)    # hair: only the strand relief
     h = hair_h * 0.55 + (pores * 0.045 + mottle * 0.02) * skinp * (1 - hair_a) + lips * 0.10 * np.sin(x * 2400) * 0.5
-    h = h + is_["teeth"] * (-0.25 * smooth(0.06, 0.0, gap))
     dhx = np.gradient(h, axis=1); dhy = np.gradient(h, axis=0)
     k = 3.2
     n[..., 0] = np.clip(n[..., 0] - 0.5 * k * dhx, 0, 1)

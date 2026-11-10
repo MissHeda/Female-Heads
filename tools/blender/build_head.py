@@ -12,14 +12,15 @@ from mathutils import Vector
 
 REPO = r"C:\Users\Heda\GitHub Repos\Female-Heads"
 sys.path.insert(0, os.path.join(REPO, "tools"))
-import importlib, hairline; importlib.reload(hairline)
+import importlib, hairline, raycast; importlib.reload(hairline); importlib.reload(raycast)
 
 sc = bpy.data.scenes["FemaleHead"]
 base = bpy.data.objects["FH_basemesh"]
 EYE_X, EYE_Y, EYE_Z = 0.0325, -0.0873, 0.705      # vanilla eye bone pivots (y = depth, z = height)
 CUT_Z, CUT_X = 0.476, 0.088
 HAIR_T = 0.003                                    # hair thickness on the scalp
-SKIN_TRIS = 5400
+SKIN_TRIS = 13000
+TEETH_TRIS = 1500
 PARTS = {"skin": 0, "cavity": 1, "eye": 2, "tongue": 3, "teeth": 4, "bun": 5}
 
 for n in ("FH_head", "FH_high"):
@@ -123,6 +124,45 @@ def hair_volume(ob, only=None):
     return m
 
 
+_vp = os.path.join(REPO, "tools", "ref", "models", "Heads_m_white_01.npz")
+VAN = (np.load(_vp)["P"], np.load(_vp)["F"]) if os.path.exists(_vp) else None
+
+
+def clamp_to_vanilla(ob, eye_r, margin_hair=0.0010, margin_skin=0.0003):
+    """Pull everything above the neck inside the vanilla head (helmets, glasses and masks are built around it).
+
+    Along the ray from the head centre a point may not lie beyond the outermost vanilla surface. The pull-in is
+    spread over the neighbours so the surface stays smooth. Afterwards the lids are kept clear of the eyeballs,
+    which sit on the vanilla eye pivots."""
+    if VAN is None:
+        print("no vanilla reference (tools/ref_dump.py): head NOT clamped"); return
+    me = ob.data
+    P = np.array([list(v.co) for v in me.vertices])                       # (x, depth, height)
+    A = np.stack([P[:, 0], P[:, 2], P[:, 1]], -1)                         # arma (x, height, depth)
+    ci = ob.vertex_groups["FH_p_cavity"].index
+    outer = np.array([not any(g.group == ci and g.weight > 0.5 for g in v.groups) for v in me.vertices])
+    sel = A[:, 1] > 0.585
+    dirs, r = raycast.radial(A[sel]); _, far = raycast.hits(dirs, *VAN)
+    hm = hairline.hair_mask(P[sel], soft=0.010)
+    margin = margin_skin + (margin_hair - margin_skin) * hm
+    ex = np.maximum(np.where(np.isnan(far), 0.0, r - (far - margin)), 0.0)
+    # The lids must keep lying on the eyeballs (which sit on the vanilla eye pivots): leave the eye region as it
+    # is and blend the pull-in over a wide ring around it, so no crease forms.
+    de = np.linalg.norm(np.stack([np.abs(P[:, 0]) - EYE_X, P[:, 1] - EYE_Y, P[:, 2] - EYE_Z], -1), axis=1)
+    keep = hairline.smooth(0.017, 0.036, de)
+    full = np.zeros(len(P)); full[sel] = ex; full *= keep
+    edges = np.array([e.vertices[:] for e in me.edges])
+    s_ = full.copy(); cnt = np.zeros(len(P)); np.add.at(cnt, edges[:, 0], 1); np.add.at(cnt, edges[:, 1], 1)
+    for _ in range(12):
+        acc = np.zeros(len(P)); np.add.at(acc, edges[:, 0], s_[edges[:, 1]]); np.add.at(acc, edges[:, 1], s_[edges[:, 0]])
+        s_ = np.maximum(full, 0.5 * s_ + 0.5 * acc / np.maximum(cnt, 1)) * keep
+    C = np.array([raycast.CENTRE[0], raycast.CENTRE[2], raycast.CENTRE[1]])
+    d = P - C; rr = np.linalg.norm(d, axis=1)
+    Q = C + d * ((rr - s_) / rr)[:, None]
+    for v in me.vertices: v.co = Vector(Q[v.index])
+    print(f"clamped to the vanilla head: {int((full > 0.0002).sum())} of {len(P)} points pulled in, deepest {full.max() * 1000:.1f} mm")
+
+
 # ---------------------------------------------------------------- skin
 skin = copy_fitted(base, "FH_head"); cut_skin(skin)
 skin.modifiers.clear(); skin.parent = None
@@ -158,28 +198,38 @@ b.free()
 print("cavity verts", len(cav), "islands", len(isl))
 mark(skin, "FH_p_cavity", sorted(cav))
 
-# high-poly skin for the normal bake
+# one smooth subdivision is the common base of the model and of the normal-bake source
+sub = skin.modifiers.new("sub", "SUBSURF"); sub.levels = 1; apply_mod(skin, sub)
+me = skin.data
+hair_volume(skin)
+_eo2 = [fit(_eo.matrix_world @ v.co) for v in _eo.data.vertices if (_eo.matrix_world @ v.co).x > 0]
+EYE_R0 = (max(p.z for p in _eo2) - min(p.z for p in _eo2)) / 2
+clamp_to_vanilla(skin, EYE_R0)
 high = new_obj("FH_high", me.copy())
 for g in skin.vertex_groups: high.vertex_groups.new(name=g.name)
-sub = high.modifiers.new("sub", "SUBSURF"); sub.levels = 2; apply_mod(high, sub)
-hair_volume(high)
+sub = high.modifiers.new("sub", "SUBSURF"); sub.levels = 1; apply_mod(high, sub)
 for p in high.data.polygons: p.use_smooth = True
 
 # decimate: keep the face dense, thin out scalp, neck and cavity
 P = np.array([list(v.co) for v in me.vertices])
 facey = hairline.smooth(-0.045, -0.075, P[:, 1]) * hairline.smooth(EYE_Z - 0.125, EYE_Z - 0.10, P[:, 2]) * hairline.smooth(EYE_Z + 0.065, EYE_Z + 0.045, P[:, 2])
-ears_i = skin.vertex_groups["ears"].index
+ears_i = skin.vertex_groups["ears"].index; cav_i = skin.vertex_groups["FH_p_cavity"].index
 dg = skin.vertex_groups.new(name="FH_dec")
 for v in me.vertices:
     w = 0.8 - 0.3 * float(facey[v.index])
     if any(g.group == ears_i and g.weight > 0.3 for g in v.groups): w = min(w, 0.55)
-    if v.index in cav: w = 1.0
+    if any(g.group == cav_i and g.weight > 0.5 for g in v.groups): w = 1.0
     dg.add([v.index], w, "REPLACE")
 tris0 = sum(len(p.vertices) - 2 for p in me.polygons)
 d = skin.modifiers.new("dec", "DECIMATE"); d.ratio = SKIN_TRIS / tris0; d.use_symmetry = True; d.symmetry_axis = "X"
 d.vertex_group = "FH_dec"; d.vertex_group_factor = 1.0
 apply_mod(skin, d)
-hairm = hair_volume(skin)
+# marker groups were interpolated by the subdivision: make them crisp again
+g_ = skin.vertex_groups["FH_p_cavity"]
+for v in skin.data.vertices:
+    w = max([x.weight for x in v.groups if x.group == cav_i] or [0.0])
+    if w > 0.5: g_.add([v.index], 1.0, "REPLACE")
+    elif w > 0: g_.remove([v.index])
 mark(skin, "FH_p_skin")
 print("skin tris", tris0, "->", sum(len(p.vertices) - 2 for p in skin.data.polygons))
 
@@ -199,66 +249,41 @@ for sgn in (1, -1):
     bb = [min(eyes.data.vertices[i].co[k] for i in idx) for k in range(3)], [max(eyes.data.vertices[i].co[k] for i in idx) for k in range(3)]
     c = Vector(((bb[0][k] + bb[1][k]) / 2 for k in range(3)))
     off = Vector((EYE_X * sgn, EYE_Y, EYE_Z)) - c
-    print("eye offset to pivot", tuple(round(x, 4) for x in off), "radius", round((bb[1][2] - bb[0][2]) / 2, 4))
     for i in idx: eyes.data.vertices[i].co += off
+    EYE_MEAN = sum((eyes.data.vertices[i].co - Vector((EYE_X * sgn, EYE_Y, EYE_Z))).length for i in idx) / len(idx)
+EYE_R = EYE_R0                                        # eyeball radius (half its height), the lids lie on it
+sub = eyes.modifiers.new("sub", "SUBSURF"); sub.levels = 1; apply_mod(eyes, sub)
+for sgn in (1, -1):                                   # subdivision shrinks a coarse ball: restore its mean radius
+    c = Vector((EYE_X * sgn, EYE_Y, EYE_Z))
+    vs = [v for v in eyes.data.vertices if v.co.x * sgn > 0]
+    mean = sum((v.co - c).length for v in vs) / len(vs)
+    for v in vs: v.co = c + (v.co - c) * (EYE_MEAN / mean)
+for p in eyes.data.polygons: p.use_smooth = True
 eyes.data.uv_layers[0].name = "src"; mark(eyes, "FH_p_eye"); parts.append(eyes)
 
 tongue = copy_fitted(asset("tongue"), "FH_tmp_tongue"); tongue.modifiers.clear(); tongue.parent = None
 tongue.data.uv_layers[0].name = "src"; mark(tongue, "FH_p_tongue"); parts.append(tongue)
 
-# ---------------------------------------------------------------- teeth: two arches measured from the MakeHuman teeth
+# ---------------------------------------------------------------- teeth: the MakeHuman teeth, thinned out
 tb = asset("teeth"); M = tb.matrix_world
 ji = tb.vertex_groups["jaw"].index
 TP = np.array([list(fit(M @ v.co)) for v in tb.data.vertices])
 low = np.array([any(g.group == ji and g.weight > 0.5 for g in v.groups) for v in tb.data.vertices])
-tm = bpy.data.meshes.new("FH_teeth"); tbm = bmesh.new(); tuv = tbm.loops.layers.uv.new("src")
-teeth = new_obj("FH_tmp_teeth", tm)
-NSEG = 18
-for lower in (False, True):
-    Q = TP[low == lower]
-    yc = Q[:, 1].max()                                # back end of the arch
-    ang = np.arctan2(Q[:, 0], -(Q[:, 1] - yc)); amax = np.percentile(np.abs(ang), 98)
-    rows = []
-    for k in range(NSEG + 1):
-        a = -amax + 2 * amax * k / NSEG
-        m = np.abs(ang - a) < (amax / NSEG) * 1.2
-        if m.sum() < 3: m = np.abs(ang - a) < (amax / NSEG) * 2.5
-        r = np.hypot(Q[m, 0], Q[m, 1] - yc)
-        ro = np.percentile(r, 95); z0, z1 = np.percentile(Q[m, 2], 3), np.percentile(Q[m, 2], 97)
-        gum, tip = (z1, z0) if not lower else (z0, z1)
-        gum += 0.0025 * (1 if not lower else -1)      # run into the gums
-        dirv = np.array([math.sin(a), -math.cos(a)])
-        ring = []
-        for rr, zz in ((ro, gum), (ro, tip), (ro - 0.0055, tip), (ro - 0.0065, gum)):
-            ring.append(tbm.verts.new((dirv[0] * rr, yc + dirv[1] * rr, zz)))
-        rows.append(ring)
-    v0 = 0.0 if not lower else 0.16
-    for k in range(NSEG):
-        for j in range(3):
-            a, b_, c, d_ = rows[k][j], rows[k + 1][j], rows[k + 1][j + 1], rows[k][j + 1]
-            f = tbm.faces.new((a, b_, c, d_) if not lower else (d_, c, b_, a))
-            vv = [0.0, 0.085, 0.105, 0.14]
-            uvs = {a: (k / NSEG, v0 + vv[j]), b_: ((k + 1) / NSEG, v0 + vv[j]), c: ((k + 1) / NSEG, v0 + vv[j + 1]), d_: (k / NSEG, v0 + vv[j + 1])}
-            for l in f.loops: l[tuv].uv = uvs[l.vert]
-    tbm.verts.index_update()
-tbm.normal_update()
-bmesh.ops.recalc_face_normals(tbm, faces=tbm.faces[:])
-tbm.to_mesh(tm); tbm.free()
-# outward check: the outer wall must face away from the arch centre
-for g in ("head", "jaw", "FH_p_teeth"): teeth.vertex_groups.new(name=g)
-zmid = (TP[low][:, 2].max() + TP[~low][:, 2].min()) / 2
-for v in tm.vertices:
-    teeth.vertex_groups["jaw" if v.co.z < zmid else "head"].add([v.index], 1.0, "REPLACE")
-mark(teeth, "FH_p_teeth"); parts.append(teeth)
+zmid = (TP[low][:, 2].max() + TP[~low][:, 2].min()) / 2          # where the teeth meet = the mouth line
+teeth = copy_fitted(tb, "FH_tmp_teeth"); teeth.modifiers.clear(); teeth.parent = None
+d = teeth.modifiers.new("dec", "DECIMATE"); d.ratio = TEETH_TRIS / sum(len(p.vertices) - 2 for p in teeth.data.polygons); apply_mod(teeth, d)
+for p in teeth.data.polygons: p.use_smooth = True
+teeth.data.uv_layers[0].name = "src"; mark(teeth, "FH_p_teeth"); parts.append(teeth)
 
 # ---------------------------------------------------------------- bun
 SP = np.array([list(v.co) for v in skin.data.vertices])
-bz = EYE_Z - 0.040
-m = (np.abs(SP[:, 2] - bz) < 0.012) & (np.abs(SP[:, 0]) < 0.02)
+# Low bun at the nape: the vanilla helmets end at height 0.64-0.66 at the back, the bun stays below that.
+bz = EYE_Z - 0.094
+m = (np.abs(SP[:, 2] - bz) < 0.010) & (np.abs(SP[:, 0]) < 0.02)
 backy = SP[m, 1].max()
-RX, RY, RZ = 0.036, 0.026, 0.034
+RX, RY, RZ = 0.031, 0.018, 0.0215
 bb = bmesh.new(); buv = bb.loops.layers.uv.new("src")
-bmesh.ops.create_uvsphere(bb, u_segments=22, v_segments=12, radius=1.0)
+bmesh.ops.create_uvsphere(bb, u_segments=32, v_segments=16, radius=1.0)
 for v in bb.verts:
     x, y, z = v.co                                   # unit sphere, pole along z
     px, py, pz = x, z, y                             # pole along depth (y)
@@ -275,9 +300,9 @@ for f in bb.faces:
 bmesh.ops.recalc_face_normals(bb, faces=bb.faces[:])
 bme = bpy.data.meshes.new("FH_bun"); bb.to_mesh(bme); bb.free()
 bun = new_obj("FH_tmp_bun", bme)
-for v in bme.vertices: v.co += Vector((0, backy + RY * 0.45, bz))
+for v in bme.vertices: v.co += Vector((0, backy + RY * 0.33, bz))
 mark(bun, "head"); mark(bun, "FH_p_bun"); parts.append(bun)
-BUN = [0.0, backy + RY * 0.45, bz]
+BUN = [0.0, backy + RY * 0.33, bz]
 
 # ---------------------------------------------------------------- join + atlas
 for o in sc.objects: o.select_set(False)
@@ -332,7 +357,7 @@ def areauv(fs):
         u = [l[uvl].uv for l in f.loops]
         for i in range(1, len(u) - 1): a += abs((u[i] - u[0]).cross(u[i + 1] - u[0])) / 2
     return a
-SCALE = {"skin": 1.0, "cavity": 0.32, "eye": 1.9, "tongue": 0.5, "teeth": 1.15, "bun": 0.95}
+SCALE = {"skin": 1.0, "cavity": 0.32, "eye": 1.9, "tongue": 0.5, "teeth": 0.5, "bun": 0.95}
 for fs in isl.values():
     part = fpart[fs[0].index]
     a3, au = area3(fs), areauv(fs)
@@ -341,7 +366,8 @@ for fs in isl.values():
     # hair-only skin islands (back of the head) need less
     if part == "skin":
         c = sum((v.co for f in fs for v in f.verts), Vector()) / sum(len(f.verts) for f in fs)
-        if hairline.hair_mask(np.array([list(c)]))[0] > 0.9 and len(fs) < 400: s *= 0.8
+        if c.z < 0.585: s *= 0.62                      # neck and chest: mostly under the collar
+        elif hairline.hair_mask(np.array([list(c)]))[0] > 0.9 and len(fs) < 0.2 * len(b.faces): s *= 0.7
     cu = sum((l[uvl].uv for f in fs for l in f.loops), Vector((0, 0))) / sum(len(f.loops) for f in fs)
     for f in fs:
         for l in f.loops: l[uvl].uv = cu + (l[uvl].uv - cu) * s
@@ -358,20 +384,13 @@ with bpy.context.temp_override(window=win, area=area, region=region, screen=win.
     bpy.ops.object.mode_set(mode="OBJECT")
 me.uv_layers.active = me.uv_layers["atlas"]
 
-L = {"eye_l": [EYE_X, EYE_Y, EYE_Z], "eye_r": 0.0143, "mouth_z": float(zmid), "bun": BUN, "bun_r": [RX, RY, RZ], "fit": FIT, "parts": PARTS,
+L = {"eye_l": [EYE_X, EYE_Y, EYE_Z], "eye_r": float(EYE_R), "mouth_z": float(zmid), "bun": BUN, "bun_r": [RX, RY, RZ], "fit": FIT, "parts": PARTS,
      "hair_t": HAIR_T}
 os.makedirs(os.path.join(REPO, "tools", "bake"), exist_ok=True)
 json.dump(L, open(os.path.join(REPO, "tools", "bake", "landmarks.json"), "w"), indent=1)
 P = np.array([list(v.co) for v in me.vertices])
 print("FH_head verts", len(me.vertices), "tris", sum(len(p.vertices) - 2 for p in me.polygons),
       "bounds", P.min(0).round(4), P.max(0).round(4))
-ref = json.load(open(os.path.join(REPO, "tools", "reference_envelope.json")))
-gi = head.vertex_groups["FH_p_skin"].index
-SK = np.array([list(v.co) for v in me.vertices if any(g.group == gi for g in v.groups)])
-print("slice height: mine (xmax, ymin, ymax) | reference")
-for y, xm, zmin, zmax in ref["neck"]:
-    m = np.abs(SK[:, 2] - y) < 0.007
-    if m.sum() > 3: print(f"  {y:.2f}: {np.abs(SK[m, 0]).max():.3f} {SK[m, 1].min():+.3f} {SK[m, 1].max():+.3f} | {xm:.3f} {zmin:+.3f} {zmax:+.3f}")
 base.hide_render = True; base.hide_set(True); high.hide_render = True; high.hide_set(True)
 for o in sc.objects:
     if o.name.startswith("FH_basemesh."): o.hide_render = True; o.hide_set(True)
