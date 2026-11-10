@@ -1,5 +1,5 @@
 import bpy, math, mathutils, os
-OUT = os.environ.get('FH_OUT', r'C:\Users\Heda\AppData\Local\Temp\claude\8f03d91783da74f4\63ff5fce-fa89-46de-83be-aa45bc30713c\scratchpad\fh\render.png')
+OUT = os.environ.get('FH_OUT', os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'out', 'render.png'))
 def render(target_objs, center, dist=0.6, views=((0,0),(60,0),(90,0),(180,0)), out=OUT, res=512):
     sc = bpy.context.scene
     cam = bpy.data.objects.get('FH_cam')

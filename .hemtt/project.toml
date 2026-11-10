@@ -23,5 +23,6 @@ preset = "Hemtt"
 workshop = [
     "450814997",  # CBA_A3
     "463939057",  # ACE3
+    "2021778690", # Task Force Timberwolf Female Characters (required)
     "3499977893", # Advanced Developer Tools
 ]

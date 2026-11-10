@@ -36,12 +36,21 @@ def entries(path):
     return out
 
 
+# their editable (unbinarized) models: the new characters are reshaped copies of these
+UNBIN = os.path.join(os.path.dirname(os.path.dirname(PBO)), "Unbinarized - for editing.7z")
+if not os.path.exists(os.path.join(TMP, "unbin", "A3_female_heads - UB", "Models", "female_head_bun.p3d")):
+    os.makedirs(os.path.join(TMP, "unbin"), exist_ok=True)
+    subprocess.run([r"C:\Windows\System32\tar.exe", "-xf", UNBIN, "-C", os.path.join(TMP, "unbin")], check=True)
+
 files = entries(PBO)
-want = {"models\\female_head_bun.p3d": "head.p3d", "hair\\hair_01_co.paa": "tftw_hair.paa",
-        "female_head_iceman\\female_01\\xxx_co.paa": "tftw_face.paa"}
+want = {"models\\female_head_bun.p3d": "head.p3d"}
+for i in (1, 2, 3, 4):
+    want[f"female_head_iceman\\female_0{i}\\xxx_co.paa"] = f"face_0{i}.paa"
+want["female_head_iceman\\female_01\\f_hl_co.paa"] = "hands_01.paa"
+want["female_head_iceman\\female_03\\f_hl_co.paa"] = "hands_03.paa"
 for k, v in want.items():
     open(os.path.join(TMP, v), "wb").write(files[k])
-for n in ("tftw_hair", "tftw_face"):
+for n in [v[:-4] for v in want.values() if v.endswith(".paa")]:
     subprocess.run([TOPAA, os.path.join(TMP, n + ".paa"), os.path.join(HERE, "ref", "tex", n + ".png")], check=True, stdout=subprocess.DEVNULL)
 js = os.path.join(TMP, "head.json")
 subprocess.run([NODE, os.path.join(HERE, "odump.mjs"), ODOL, os.path.join(TMP, "head.p3d"), js], check=True, stdout=subprocess.DEVNULL)
@@ -58,5 +67,6 @@ for vi, refs in enumerate(L["boneRef"]):
         if w: W[vi, col[s2s[i]]] += w / tot
 names = [bones[b] for b in used]
 eye = W[:, [names.index("eyeleft"), names.index("eyeright")]].sum(1) > 0.5
-np.savez(os.path.join(HERE, "ref", "models", "tftw_head.npz"), P=P, F=F, W=W, bones=np.array(names), eye=eye)
+uv = np.array(L["uvSets"][0]).reshape(-1, 2)
+np.savez(os.path.join(HERE, "ref", "models", "tftw_head.npz"), P=P, F=F, W=W, bones=np.array(names), eye=eye, uv=uv)
 print(len(P), "points", len(F), "triangles", len(names), "bones ->", os.path.join("tools", "ref", "models", "tftw_head.npz"))

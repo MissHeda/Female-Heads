@@ -2,7 +2,6 @@
 
 ## 0.1.0
 
-- First female head: pulled-back hair with a low bun, light and dark skin, own wound textures.
-- Skinned to the vanilla face bones: talking, blinking and expressions work like on vanilla heads.
-- High-detail model (16.6k triangles, five LODs) that lies inside the vanilla head: nothing shows through vanilla helmets.
-- Neck base shaped and weighted like a vanilla-compatible head, so it stays under the uniform.
+- Eight new female characters on the Task Force Timberwolf female head, each with a Tactical (face paint) variant:
+  Kovacs, Reyes, Okoye, Walsh, Lindqvist, Fraser, Novak, Haddad.
+- Own face shape, skin tone, hair, brow and eye colour per character, matching hand textures.
