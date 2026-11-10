@@ -1,11 +1,12 @@
 """Write the female head MLOD (addons/heads/models/fh_head_bun.p3d) from the Blender export (tools/bake/*.npz).
 
-- Frame: Blender (x, y back, z up, metres) -> Arma model space of a CfgHeads model (x, y up, z back):
-  eye centre lands on the vanilla eye memory point, so the vanilla face RTMs drive the right regions.
-- Skinning: the MakeHuman default rig's face bones are mapped onto the Arma OFP2_ManSkeleton face bones;
-  bones the MakeHuman rig lacks (forehead, cheeks, chin, jowl, brows) are split off by region with soft falloffs.
+- Frame: the export is already in Arma model space with Blender axes (x, depth, height) -> (x, height, depth).
+- Skinning: the MakeHuman default rig's face bones are mapped onto the face bones of OFP2_ManSkeleton.
+  The vanilla face animations are heavily exaggerated and meant for small weights (lips 0.2-0.3, lids 0.1,
+  brows 0.05...), with the rest of every face vertex on Head. The caps below come from replaying the vanilla
+  RTMs on a vanilla-compatible head (tools/simulate.py); with full weights the face would tear apart.
 - LODs 1/2/4 (visual), 10000 (shadow volume, closed), 1e15 (memory points).
-- MLOD conventions (checked against BI/TFTW heads): cross(p1-p0, p2-p0) and stored normals point inwards,
+- MLOD conventions (checked against BI heads): cross(p1-p0, p2-p0) and stored normals point inwards,
   UV origin top left.
 usage (repo root): python -I tools/build_p3d.py
 """
@@ -19,96 +20,119 @@ OUT = os.path.join(HERE, "..", "addons", "heads", "models", "fh_head_bun.p3d")
 PREFIX = "z\\mhfh\\addons\\heads\\"
 TEX = PREFIX + "data\\fh_light_co.paa"
 MAT = PREFIX + "data\\fh_light.rvmat"
-
-L = json.load(open(os.path.join(BAKE, "landmarks.json")))
-EYE = np.array(L["joint-l-eye"]); EZ, EY = EYE[2], EYE[1]
-S = 1.02
-ARMA_EYE = (0.705, -0.081)  # 6 mm behind the male eye: the female nose would poke out of facewear  # (y, z) of the vanilla eye-centre memory point
+EYE = np.array(json.load(open(os.path.join(BAKE, "landmarks.json")))["eye_l"])   # (x, depth, height)
+EX, EY, EZ = EYE
 
 
 def to_arma(p):
     p = np.asarray(p, dtype=np.float64)
-    return np.stack([S * p[..., 0], S * (p[..., 2] - EZ) + ARMA_EYE[0], S * (p[..., 1] - EY) + ARMA_EYE[1]], -1)
-
-
-def nrm_to_arma(n):
-    n = np.asarray(n, dtype=np.float64)
-    return np.stack([n[..., 0], n[..., 2], n[..., 1]], -1)
+    return np.stack([p[..., 0], p[..., 2], p[..., 1]], -1)
 
 
 # ---------------------------------------------------------------- skin weights
 def smooth(e0, e1, x):
-    t = np.clip((x - e0) / (e1 - e0), 0, 1)
+    t = min(1.0, max(0.0, (x - e0) / (e1 - e0)))
     return t * t * (3 - 2 * t)
 
 
-DIRECT = {
-    "oris01": "Face_LipLowerMiddle", "oris07.L": "Face_LipLowerLeft", "oris07.R": "Face_LipLowerRight",
+# weight a face bone gets where the MakeHuman bone has full weight
+CAP = {
+    "Face_Jawbone": 0.87,                       # whole jaw family (jaw + its children) against Head
+    "Face_LipLowerMiddle": 0.25, "Face_LipLowerLeft": 0.18, "Face_LipLowerRight": 0.18, "Face_Tongue": 0.18,
+    "Face_Jowl": 0.39, "Face_ChopLeft": 0.27, "Face_ChopRight": 0.27, "Face_Chin": 0.02,
+    "Face_LipUpperMiddle": 0.31, "Face_LipUpperLeft": 0.22, "Face_LipUpperRight": 0.22,
+    "Face_CornerLeft": 0.07, "Face_CornerRight": 0.07, "Face_CheekSideLeft": 0.04, "Face_CheekSideRight": 0.04,
+    "Face_CheekFrontLeft": 0.04, "Face_CheekFrontRight": 0.04, "Face_CheekUpperLeft": 0.07, "Face_CheekUpperRight": 0.07,
+    "Face_NostrilLeft": 0.05, "Face_NostrilRight": 0.05, "Face_Forehead": 0.04,
+    "Face_BrowFrontLeft": 0.07, "Face_BrowFrontRight": 0.07, "Face_BrowMiddle": 0.05,
+    "Face_BrowSideLeft": 0.04, "Face_BrowSideRight": 0.04,
+    "Face_EyelidUpperLeft": 0.11, "Face_EyelidUpperRight": 0.11, "Face_EyelidLowerLeft": 0.02, "Face_EyelidLowerRight": 0.02,
+    "Face_Eyelids": 0.04,
+}
+CAP.update(json.load(open(os.path.join(HERE, "weight_caps.json"))) if os.path.exists(os.path.join(HERE, "weight_caps.json")) else {})
+UPPER = {  # MakeHuman bone -> face bone that hangs on Head (Face_Hub)
     "oris05": "Face_LipUpperMiddle", "oris03.L": "Face_LipUpperLeft", "oris03.R": "Face_LipUpperRight",
     "levator06.L": "Face_NostrilLeft", "levator06.R": "Face_NostrilRight",
     "levator05.L": "Face_CheekFrontLeft", "levator05.R": "Face_CheekFrontRight",
     "orbicularis03.L": "Face_EyelidUpperLeft", "orbicularis03.R": "Face_EyelidUpperRight",
     "orbicularis04.L": "Face_EyelidLowerLeft", "orbicularis04.R": "Face_EyelidLowerRight",
-    "eye.L": "L_Eye", "eye.R": "R_Eye",
-    "neck03": "Neck1", "neck02": "Neck", "neck01": "Neck",
-    "clavicle.L": "LeftShoulder", "clavicle.R": "RightShoulder",
 }
+LOWER = {"oris01": "Face_LipLowerMiddle", "oris07.L": "Face_LipLowerLeft", "oris07.R": "Face_LipLowerRight"}
 SPINE = ("spine", "breast", "shoulder", "upperarm")
 ALIAS = {"L_Eye": "EyeLeft", "R_Eye": "EyeRight"}  # second selection name the engine also looks for
+SKIP = ("joint-", "helper-", "FH_")
 
 
 def arma_weights(groups, p):
-    """groups: list of (mh_name, weight); p: Blender-space position -> {arma_bone: weight}"""
+    """groups: list of (makehuman_group, weight); p: fitted position (x, depth, height) -> {arma_bone: weight}"""
     x, y, z = p
-    side = "Left" if x >= 0 else "Right"
-    ax = abs(x)
+    side = "Left" if x >= 0 else "Right"; ax = abs(x)
+    g = defaultdict(float)
+    for n, w in groups:
+        if n in ("body", "Left", "Mid", "Right", "lips", "HelperGeometry", "JointCubes") or n.startswith(SKIP): continue
+        g[n] += w
+    tot = sum(g.values())
+    if tot <= 0: return {"Head": 1.0}
+    for n in g: g[n] /= tot
     acc = defaultdict(float)
-    for g, w in groups:
-        if g in ("body", "Left", "Mid", "Right", "FH_bunmark", "lips") or g.startswith(("joint-", "helper-")):
-            continue
-        if g in DIRECT:
-            acc[DIRECT[g]] += w
-        elif g.startswith("tongue"):
-            acc["Face_Tongue"] += w
-        elif g.startswith(SPINE):
-            acc["Spine3"] += w
-        elif g == "jaw":
-            dz = z - (EZ - 0.088)                      # chin height
-            chin = smooth(0.026, 0.010, ax) * smooth(-0.02, -0.005, -(y - EY + 0.0))  # front, centre
-            chin *= smooth(0.035, 0.0, abs(dz))
-            jowl = smooth(-0.005, 0.02, y - EY) * smooth(EZ - 0.07, EZ - 0.10, z)     # under the jaw
-            chop = smooth(0.03, 0.05, ax) * (1 - jowl)
-            rest = max(0.0, 1 - chin - jowl - chop)
-            acc["Face_Chin"] += w * chin
-            acc["Face_Jowl"] += w * jowl
-            acc["Face_Chop" + side] += w * chop
-            acc["Face_Jawbone"] += w * rest
-        elif g.startswith("risorius03"):
-            far = smooth(0.045, 0.06, ax)
-            acc["Face_Corner" + side] += w * (1 - far)
-            acc["Face_CheekSide" + side] += w * far
-        elif g.startswith("oculi01"):
-            mid = smooth(0.013, 0.006, ax)
-            sd = smooth(0.035, 0.05, ax) * (1 - mid)
-            acc["Face_BrowMiddle"] += w * mid
-            acc["Face_BrowSide" + side] += w * sd
-            acc["Face_BrowFront" + side] += w * (1 - mid - sd)
-        else:  # head, scalp, ears, special*, unknown -> Head, with forehead / upper cheek split off
-            front = smooth(-0.07, -0.095, y)
-            fore = front * smooth(EZ + 0.028, EZ + 0.040, z) * smooth(EZ + 0.075, EZ + 0.060, z) * smooth(0.06, 0.04, ax)
-            cheek = smooth(-0.065, -0.09, y) * smooth(EZ - 0.045, EZ - 0.025, z) * smooth(EZ - 0.003, EZ - 0.015, z) \
-                * smooth(0.018, 0.03, ax) * smooth(0.068, 0.055, ax)
-            acc["Face_Forehead"] += w * fore
-            acc["Face_CheekUpper" + side] += w * cheek
-            acc["Head"] += w * max(0.0, 1 - fore - cheek)
-    # face bones only act on the face; stray small weights on the sides and back go to Head
-    if y > EY + 0.045:
-        for k in [k for k in acc if k.startswith(("Face_Nostril", "Face_Lip", "Face_Brow", "Face_Eyelid", "Face_CheekFront", "Face_Forehead"))]:
-            acc["Head"] += acc.pop(k)
-    if not acc:
-        acc["Head"] = 1.0
+    # eyeballs follow the eye bones completely
+    for n, b in (("eye.L", "L_Eye"), ("eye.R", "R_Eye")):
+        if g.get(n, 0) > 0.5: return {b: 1.0}
+    # --- jaw family: jaw, lower lip, tongue (all hang on Face_Jawbone)
+    jaw = g.get("jaw", 0.0); low = {b: g.get(n, 0.0) for n, b in LOWER.items()}
+    tongue = sum(w for n, w in g.items() if n.startswith("tongue"))
+    J = jaw + sum(low.values()) + tongue
+    if J > 0:
+        fam = CAP["Face_Jawbone"] * J
+        parts = {b: CAP[b] * w for b, w in low.items()}
+        parts["Face_Tongue"] = CAP["Face_Tongue"] * tongue
+        under = smooth(EZ - 0.105, EZ - 0.125, z) * smooth(EY + 0.005, EY + 0.03, y)       # under the jaw
+        chop = smooth(0.030, 0.050, ax) * (1 - under)
+        chin = smooth(0.022, 0.008, ax) * smooth(EZ - 0.085, EZ - 0.10, z) * smooth(EY - 0.005, EY - 0.02, y)
+        parts["Face_Jowl"] = CAP["Face_Jowl"] * under * jaw
+        parts["Face_Chop" + side] = CAP["Face_Chop" + side] * chop * jaw
+        parts["Face_Chin"] = CAP["Face_Chin"] * chin * jaw
+        s = sum(parts.values())
+        if s > fam: parts = {b: w * fam / s for b, w in parts.items()}; s = fam
+        for b, w in parts.items(): acc[b] += w
+        acc["Face_Jawbone"] += fam - s
+    # --- bones on the upper face
+    for n, b in UPPER.items():
+        if n in g: acc[b] += CAP[b] * g[n]
+    lids = g.get("orbicularis03.L", 0) + g.get("orbicularis03.R", 0) + g.get("orbicularis04.L", 0) + g.get("orbicularis04.R", 0)
+    acc["Face_Eyelids"] += CAP["Face_Eyelids"] * lids
+    for s_ in ("L", "R"):
+        r = g.get("risorius03." + s_, 0.0); sd = "Left" if s_ == "L" else "Right"
+        far = smooth(0.042, 0.058, ax)
+        acc["Face_Corner" + sd] += CAP["Face_Corner" + sd] * r * (1 - far)
+        acc["Face_CheekSide" + sd] += CAP["Face_CheekSide" + sd] * r * far
+        o = g.get("oculi01." + s_, 0.0)
+        mid = smooth(0.014, 0.006, ax); sde = smooth(0.036, 0.050, ax) * (1 - mid)
+        acc["Face_BrowMiddle"] += CAP["Face_BrowMiddle"] * o * mid
+        acc["Face_BrowSide" + sd] += CAP["Face_BrowSide" + sd] * o * sde
+        acc["Face_BrowFront" + sd] += CAP["Face_BrowFront" + sd] * o * (1 - mid - sde)
+    # forehead and upper cheeks have no MakeHuman bone: regions on the front of the face
+    headw = g.get("head", 0) + g.get("scalp", 0) + g.get("ears", 0) + sum(w for n, w in g.items() if n.startswith("special"))
+    front = smooth(EY + 0.030, EY + 0.008, y)
+    fore = front * smooth(EZ + 0.026, EZ + 0.038, z) * smooth(EZ + 0.062, EZ + 0.048, z) * smooth(0.062, 0.045, ax)
+    cheek = smooth(EY + 0.035, EY + 0.012, y) * smooth(EZ - 0.046, EZ - 0.026, z) * smooth(EZ - 0.006, EZ - 0.016, z) \
+        * smooth(0.016, 0.028, ax) * smooth(0.070, 0.056, ax)
+    acc["Face_Forehead"] += CAP["Face_Forehead"] * fore * headw
+    acc["Face_CheekUpper" + side] += CAP["Face_CheekUpper" + side] * cheek * headw
+    # --- neck chain and torso
+    n1, n2, n3 = g.get("neck01", 0), g.get("neck02", 0), g.get("neck03", 0)
+    acc["Neck"] += n1 + 0.60 * n2 + 0.15 * n3
+    acc["Neck1"] += 0.25 * n2 + 0.25 * n3
+    neck_head = 0.15 * n2 + 0.60 * n3
+    for n, w in g.items():
+        if n.startswith("clavicle"):
+            sd = "Left" if n.endswith(".L") else "Right"
+            acc[sd + "Shoulder"] += 0.1 * w; acc["Spine3"] += 0.9 * w
+        elif n.startswith(SPINE): acc["Spine3"] += w
+    acc = {b: w for b, w in acc.items() if w > 0.004}
+    rest = 1.0 - sum(acc.values())
+    if rest > 0: acc["Head"] = acc.get("Head", 0.0) + rest
     top = sorted(acc.items(), key=lambda kv: -kv[1])[:4]
-    top = [(k, v) for k, v in top if v > 0.02] or [("Head", 1.0)]
     s = sum(v for _, v in top)
     return {k: v / s for k, v in top}
 
@@ -123,15 +147,15 @@ def tagg(name, data):
 
 
 def enc_w(w):
-    if w <= 0.0: return 0
-    if w >= 0.995: return 1
-    return min(255, max(3, int(round((1 - w) * 100 * 2.55555)) + 2))
+    """selection weight byte: 0 none, 1 full, otherwise 2..255 falling from almost full to almost none"""
+    if w <= 0.002: return 0
+    if w >= 0.998: return 1
+    return min(255, max(2, int(round((1.0 - w) * 253.0)) + 2))
 
 
 def lod_bytes(res, P, faces, sels, props=(), uv=True):
-    """P: (n,3) arma points; faces: list of (corners[(pi, normal_xyz_inward, (u,v))]); sels: {name: per-point weights}"""
-    nidx = {}; normals = []
-    fl = []
+    """P: (n,3) arma points; faces: list of corners (point index, inward normal, (u, v)); sels: {name: per-point weights}"""
+    nidx = {}; normals = []; fl = []
     for f in faces:
         cs = []
         for pi, n, t in f:
@@ -173,184 +197,61 @@ def load(name):
     return d["V"], d["F"], d["UV"], d["N"], G
 
 
-def visual_lod(name, res, shadow=False):
+def selections(W, n, visual):
+    sels = defaultdict(lambda: np.zeros(n))
+    for i, w in enumerate(W):
+        for b, x in w.items():
+            sels[b][i] = x
+            if b in ALIAS: sels[ALIAS[b]][i] = x
+    sels = dict(sels)
+    if visual:
+        sels["personality"] = np.ones(n)
+        eyes = np.maximum(sels.get("L_Eye", np.zeros(n)), sels.get("R_Eye", np.zeros(n)))
+        sels["injury_head"] = (eyes == 0).astype(float)
+    return sels
+
+
+def visual_lod(name, res):
     V, F, UV, N, G = load(name)
-    keep = np.ones(len(V), bool)
-    if shadow:  # shadow volume: skin + bun only, holes closed
-        for vi, gs in G.items():
-            if any(g.startswith(("eye.", "tongue")) for g, _ in gs): keep[vi] = False
-        teeth = [vi for vi, gs in G.items() if set(g for g, _ in gs) <= {"head", "jaw"} and V[vi][1] < EY + 0.04
-                 and abs(V[vi][0]) < 0.03 and EZ - 0.08 < V[vi][2] < EZ - 0.03 and V[vi][1] > EY - 0.0]
-        keep[teeth] = False
-    P = to_arma(V)
+    P = to_arma(V); NA = to_arma(N)
     W = [arma_weights(G[i], V[i]) for i in range(len(V))]
     faces = []
-    for f, uv, nr in zip(F, UV, N):
-        if not keep[f].all(): continue
+    for f, uv, nr in zip(F, UV, NA):
         p0, p1, p2 = P[f[0]], P[f[1]], P[f[2]]
-        nA = nrm_to_arma(nr)
-        outward = nA.mean(0)
-        order = [0, 1, 2]
-        if np.dot(np.cross(p1 - p0, p2 - p0), outward) > 0:  # make the cross product point inwards
-            order = [0, 2, 1]
-        faces.append([(int(f[k]), -nA[k], (float(uv[k][0]), 1.0 - float(uv[k][1]))) for k in order])
-    if shadow:
-        faces = close_holes(P, faces)
-    # drop unused points (shadow), reindex
-    used = sorted({c[0] for f in faces for c in f}); remap = {o: i for i, o in enumerate(used)}
-    P2 = P[used]
-    faces = [[(remap[pi], n, t) for pi, n, t in f] for f in faces]
-    sels = defaultdict(lambda: np.zeros(len(P2)))
-    for o, i in remap.items():
-        for b, w in W[o].items():
-            sels[b][i] = w
-            if b in ALIAS: sels[ALIAS[b]][i] = w
-    sels = dict(sels)
-    if not shadow:
-        allv = np.ones(len(P2))
-        sels["personality"] = allv
-        eyes = np.maximum(sels.get("L_Eye", 0), sels.get("R_Eye", 0)) if "L_Eye" in sels else np.zeros(len(P2))
-        sels["injury_head"] = (eyes == 0).astype(float)
-    props = [("LODNoShadow", "1")] if not shadow else []
-    return lod_bytes(res, P2, faces, sels, props, uv=not shadow), len(P2), len(faces)
-
-
-def close_holes(P, faces):
-    """fan-fill every boundary loop around its centroid (new points appended to P via a global list)"""
-    global SHADOW_EXTRA
-    edges = defaultdict(int); dir_ = {}
-    for f in faces:
-        for i in range(3):
-            a, b = f[i][0], f[(i + 1) % 3][0]
-            edges[(min(a, b), max(a, b))] += 1; dir_[(a, b)] = True
-    bnd = [(a, b) for (a, b) in dir_ if edges[(min(a, b), max(a, b))] == 1]
-    nxt = defaultdict(list)
-    for a, b in bnd: nxt[b].append(a)  # reverse direction for the cap
-    seen = set(); loops = []
-    for a, b in bnd:
-        if (b, a) in seen: continue
-        loop = [b]; cur = a; seen.add((b, a))
-        start = b
-        while cur != start and len(loop) < 10000:
-            loop.append(cur)
-            cand = [c for c in nxt[cur] if (cur, c) not in seen]
-            if not cand: break
-            seen.add((cur, cand[0])); cur = cand[0]
-        loops.append(loop)
-    global P_SHADOW
-    extra = []
-    base = len(P)
-    newfaces = list(faces)
-    for loop in loops:
-        if len(loop) < 3: continue
-        c = P[loop].mean(0); ci = base + len(extra); extra.append(c)
-        for i in range(len(loop)):
-            a, b = loop[i], loop[(i + 1) % len(loop)]
-            tri = [a, b, ci]
-            pa, pb = (P[a], P[b])
-            newfaces.append([(a, np.zeros(3), (0, 0)), (b, np.zeros(3), (0, 0)), (ci, np.zeros(3), (0, 0))])
-    P_SHADOW.extend(extra)
-    return newfaces
-
-
-P_SHADOW = []
+        order = [0, 2, 1] if np.dot(np.cross(p1 - p0, p2 - p0), nr.mean(0)) > 0 else [0, 1, 2]   # cross product inwards
+        faces.append([(int(f[k]), -nr[k], (float(uv[k][0]), 1.0 - float(uv[k][1]))) for k in order])
+    return lod_bytes(res, P, faces, selections(W, len(P), True), [("LODNoShadow", "1")]), len(P), len(faces), W
 
 
 def shadow_lod():
-    global P_SHADOW
     V, F, UV, N, G = load("shadow")
-    P_SHADOW = []
-    # build via visual_lod machinery, then append fan centres
-    import types
-    data = visual_lod_shadow(V, F, UV, N, G)
-    return data
-
-
-def visual_lod_shadow(V, F, UV, N, G):
-    keep = np.ones(len(V), bool)
-    for vi, gs in G.items():
-        names = set(g for g, _ in gs)
-        if any(g.startswith(("eye.", "tongue")) for g in names): keep[vi] = False
-    P = to_arma(V)
+    P = to_arma(V); NA = to_arma(N)
     W = [arma_weights(G[i], V[i]) for i in range(len(V))]
-    tris = []
-    for f, nr in zip(F, N):
-        if not keep[f].all(): continue
+    faces = []; cnt = defaultdict(int)
+    twice = defaultdict(int)
+    for f in F: twice[frozenset(int(i) for i in f)] += 1
+    for f, nr in zip(F, NA):
+        if twice[frozenset(int(i) for i in f)] > 1 or len(set(int(i) for i in f)) < 3: continue   # zero-volume fins
         p0, p1, p2 = P[f[0]], P[f[1]], P[f[2]]
-        if np.dot(np.cross(p1 - p0, p2 - p0), nrm_to_arma(nr).mean(0)) > 0: f = [f[0], f[2], f[1]]
-        tris.append([int(i) for i in f])
-    # keep the largest connected skin component + bun (drop teeth fragments)
-    adj = defaultdict(set)
-    for t in tris:
-        for a in t:
-            adj[a].update(t)
-    comp = {}; cid = 0
-    for s in adj:
-        if s in comp: continue
-        st = [s]; comp[s] = cid
-        while st:
-            a = st.pop()
-            for b in adj[a]:
-                if b not in comp: comp[b] = cid; st.append(b)
-        cid += 1
-    sizes = defaultdict(int)
-    for a, c in comp.items(): sizes[c] += 1
-    big = {c for c, n in sizes.items() if n > 40}
-    tris = [t for t in tris if comp[t[0]] in big]
-    # boundary loops (edges used once) -> fan caps, oriented like the rest (inward cross product)
-    cnt = defaultdict(int)
-    for t in tris:
-        for i in range(3): cnt[(min(t[i], t[(i + 1) % 3]), max(t[i], t[(i + 1) % 3]))] += 1
-    half = {}
-    for t in tris:
-        for i in range(3):
-            a, b = t[i], t[(i + 1) % 3]
-            if cnt[(min(a, b), max(a, b))] == 1: half[b] = a  # cap edge runs reversed: b -> a
-    Pl = list(P); Wl = list(W)
-    while half:
-        s = next(iter(half)); loop = [s]; cur = half.pop(s)
-        while cur != s and cur in half:
-            loop.append(cur); cur = half.pop(cur)
-        if len(loop) < 3: continue
-        c = np.mean([Pl[i] for i in loop], 0); ci = len(Pl); Pl.append(c)
-        Wl.append(Wl[loop[0]])
-        for i in range(len(loop)):
-            tris.append([loop[i], loop[(i + 1) % len(loop)], ci])
-    P = np.array(Pl)
-    used = sorted({i for t in tris for i in t}); remap = {o: i for i, o in enumerate(used)}
-    P2 = P[used]; tris = [[remap[i] for i in t] for t in tris]
-    faces = []
-    for t in tris:
-        p0, p1, p2 = P2[t]
-        n = np.cross(p1 - p0, p2 - p0); n = n / (np.linalg.norm(n) + 1e-12)
-        faces.append([(i, n, (0.0, 0.0)) for i in t])
-    sels = defaultdict(lambda: np.zeros(len(P2)))
-    for o, i in remap.items():
-        for b, w in Wl[o].items():
-            sels[b][i] = w
-            if b in ALIAS: sels[ALIAS[b]][i] = w
-    # closed check
-    cnt = defaultdict(int)
-    for t in tris:
-        for i in range(3): cnt[(min(t[i], t[(i + 1) % 3]), max(t[i], t[(i + 1) % 3]))] += 1
+        f = [int(i) for i in ([f[0], f[2], f[1]] if np.dot(np.cross(p1 - p0, p2 - p0), nr.mean(0)) > 0 else f)]
+        n = np.cross(P[f[1]] - P[f[0]], P[f[2]] - P[f[0]]); n = n / (np.linalg.norm(n) + 1e-12)
+        faces.append([(i, n, (0.0, 0.0)) for i in f])
+        for i in range(3): cnt[(min(f[i], f[(i + 1) % 3]), max(f[i], f[(i + 1) % 3]))] += 1
     open_edges = sum(1 for v in cnt.values() if v != 2)
-    return lod_bytes(10000.0, P2, faces, dict(sels), (), uv=False), len(P2), len(faces), open_edges
+    return lod_bytes(10000.0, P, faces, selections(W, len(P), False), (), uv=False), len(P), len(faces), open_edges
 
 
 def memory_lod():
-    eyeL = to_arma(np.array(L["joint-l-eye"])); eyeR = to_arma(np.array(L["joint-r-eye"]))
-    pupL = eyeL + [0, 0, -0.011]; pupR = eyeR + [0, 0, -0.011]
-    mid = (eyeL + eyeR) / 2
-    pts = [eyeL, eyeR, pupL, pupR, mid + [0, 0.02, 0.017], mid + [0, -0.012, -0.03], mid + [0, 0.021, -0.0]]
-    # 0 eyeL 1 eyeR 2 pupL 3 pupR 4 head(back) 5 head(front) 6 pilot
+    eL = np.array([EX, EZ, EY]); eR = np.array([-EX, EZ, EY])            # arma (x, height, depth)
+    pts = [eL, eR, eL + [0, 0, -0.010], eR + [0, 0, -0.010], np.array([0, EZ + 0.021, EY + 0.086]),
+           np.array([0, EZ - 0.010, EY + 0.017]), np.array([0, EZ + 0.021, EY + 0.017])]
     n = len(pts)
     def sel(*idx):
         w = np.zeros(n); w[list(idx)] = 1; return w
     sels = {
         "L_eye_center": sel(0), "EyeLeft_center": sel(0), "L_Eye": sel(0), "EyeLeft": sel(0),
         "R_eye_center": sel(1), "EYERight_center": sel(1), "R_Eye": sel(1), "EyeRight": sel(1),
-        "L_pupila_center": sel(2), "PupilaLeft_center": sel(2),
-        "R_pupila_center": sel(3), "PupilaRight_center": sel(3),
+        "L_pupila_center": sel(2), "PupilaLeft_center": sel(2), "R_pupila_center": sel(3), "PupilaRight_center": sel(3),
         "osobnost": sel(0, 1), "Head": sel(4, 5), "pilot": sel(6),
     }
     return lod_bytes(1e15, np.array(pts), [], sels, (), uv=False), n
@@ -359,10 +260,13 @@ def memory_lod():
 def main():
     blobs = []
     for name, res in (("lod1", 1.0), ("lod2", 2.0), ("lod3", 4.0)):
-        b, nv, nf = visual_lod(name, res); blobs.append(b); print(f"LOD {res:g}: {nv} points, {nf} faces")
-    V, F, UV, N, G = load("shadow")
-    b, nv, nf, op = visual_lod_shadow(V, F, UV, N, G); blobs.append(b)
-    print(f"shadow: {nv} points, {nf} faces, open edges {op}")
+        b, nv, nf, W = visual_lod(name, res); blobs.append(b); print(f"LOD {res:g}: {nv} points, {nf} faces")
+        if name == "lod1":
+            mx = defaultdict(float); cnt = defaultdict(int)
+            for w in W:
+                for k, v in w.items(): mx[k] = max(mx[k], v); cnt[k] += 1
+            print("  bones:", ", ".join(f"{k} {mx[k]:.2f}/{cnt[k]}" for k in sorted(mx)))
+    b, nv, nf, op = shadow_lod(); blobs.append(b); print(f"shadow: {nv} points, {nf} faces, open edges {op}")
     b, nv = memory_lod(); blobs.append(b); print(f"memory: {nv} points")
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "wb") as f:

@@ -1,0 +1,11 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
+const [,, odolLib, inp, out] = process.argv;
+const { readOdol } = await import(pathToFileURL(odolLib).href);
+const m = readOdol(readFileSync(inp));
+const keys = o => o && typeof o === 'object' ? Object.keys(o) : typeof o;
+console.log('top', keys(m));
+const lods = m.lods || m.LODs || [];
+console.log('nlods', lods.length, 'lod keys', keys(lods[0]));
+if (m.skeleton) console.log('skeleton keys', keys(m.skeleton));
+writeFileSync(out, JSON.stringify(m, (k, v) => (ArrayBuffer.isView(v) ? Array.from(v) : typeof v === 'bigint' ? Number(v) : v)));

@@ -19,3 +19,6 @@ tools/anim/load_preview.json
 tools/bake/*.npy
 tools/bake/*.npz
 tools/out/
+tools/check/
+tools/ref/anim/
+tools/pivots.json

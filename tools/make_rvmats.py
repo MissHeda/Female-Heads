@@ -21,7 +21,7 @@ def stage(n, tex):
 
 
 def rvmat(tone, injury):
-    mc = "#(argb,8,8,3)color(0.42,0.04,0.03,0.45,MC)" if injury else "#(argb,8,8,3)color(0,0,0,0,MC)"
+    mc = D + "fh_injury_mc.paa" if injury else "#(argb,8,8,3)color(0,0,0,0,MC)"
     s = 'class StageTI {\n    texture = "a3\\characters_f\\heads\\data\\m_ti_ca.paa";\n};\n'
     s += """ambient[] = {2, 2, 2, 1};
 diffuse[] = {0.45, 0.42, 0.4, 1};
