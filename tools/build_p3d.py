@@ -12,9 +12,12 @@ usage (repo root): python -I tools/build_p3d.py
 """
 import json, os, struct
 from collections import defaultdict
+import sys
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import raycast
 BAKE = os.path.join(HERE, "bake")
 OUT = os.path.join(HERE, "..", "addons", "heads", "models", "fh_head_bun.p3d")
 PREFIX = "z\\mhfh\\addons\\heads\\"
@@ -137,6 +140,50 @@ def arma_weights(groups, p):
     return {k: v / s for k, v in top}
 
 
+# ---------------------------------------------------------------- neck base: weights of the reference head
+# Uniforms are modelled around the neck base of a vanilla-compatible head and it has to follow the body exactly
+# like that one. Below the jaw the weights are therefore taken from the reference head (tools/ref_tftw.py) at the
+# nearest point of its surface, blending into the own weights between heights 0.60 and 0.63.
+_rp = os.path.join(HERE, "ref", "models", "tftw_head.npz")
+REFHEAD = None
+if os.path.exists(_rp):
+    _r = np.load(_rp)
+    _keep = ~_r["eye"][_r["F"]].any(1)
+    _S, _tri, _bary = raycast.surface_samples(_r["P"], _r["F"][_keep], 3)
+    _ok = _S[:, 1] < 0.66
+    _proper = {k.lower(): k for k in list(CAP) + ["Head", "Neck", "Neck1", "Spine3", "LeftShoulder", "RightShoulder"]}
+    REFHEAD = dict(S=_S[_ok], tri=_r["F"][_keep][_tri[_ok]], bary=_bary[_ok], W=_r["W"],
+                   bones=[_proper.get(str(b), str(b)) for b in _r["bones"]])
+else:
+    print("no reference head (tools/ref_tftw.py): neck base keeps the MakeHuman weights")
+
+
+def neck_weights(W, P, skin):
+    """W: list of {bone: weight}; P: arma points; skin: mask of points that belong to the skin"""
+    if REFHEAD is None: return W
+    idx = np.nonzero(skin & (P[:, 1] < 0.63))[0]
+    if not len(idx): return W
+    near = raycast.nearest(P[idx], REFHEAD["S"])
+    for i, s in zip(idx, near):
+        t = smooth(0.63, 0.60, P[i, 1])
+        ref = (REFHEAD["W"][REFHEAD["tri"][s]] * REFHEAD["bary"][s][:, None]).sum(0)
+        acc = defaultdict(float)
+        for b, w in W[i].items(): acc[b] += (1 - t) * w
+        for k, w in enumerate(ref):
+            if w > 0.003: acc[REFHEAD["bones"][k]] += t * w
+        top = sorted(acc.items(), key=lambda kv: -kv[1])[:4]
+        tot = sum(v for _, v in top)
+        W[i] = {b: v / tot for b, v in top}
+    return W
+
+
+def skin_mask(G, n):
+    m = np.ones(n, bool)
+    for i in range(n):
+        if any(g.startswith("FH_p_") and g not in ("FH_p_skin",) and w > 0.5 for g, w in G[i]): m[i] = False
+    return m
+
+
 # ---------------------------------------------------------------- MLOD writer
 def asciiz(s):
     return s.encode("latin1") + b"\0"
@@ -215,6 +262,7 @@ def visual_lod(name, res):
     V, F, UV, N, G = load(name)
     P = to_arma(V); NA = to_arma(N)
     W = [arma_weights(G[i], V[i]) for i in range(len(V))]
+    W = neck_weights(W, P, skin_mask(G, len(P)))
     faces = []
     for f, uv, nr in zip(F, UV, NA):
         p0, p1, p2 = P[f[0]], P[f[1]], P[f[2]]
@@ -226,7 +274,15 @@ def visual_lod(name, res):
 def shadow_lod():
     V, F, UV, N, G = load("shadow")
     P = to_arma(V); NA = to_arma(N)
+    # The shadow shell must lie inside the visible model everywhere, or the head shadows itself in dark streaks:
+    # pull every point that comes within 1.5 mm of the visible surface (seen from the head centre) back inside.
+    V1, F1, _, _, _ = load("lod1"); P1 = to_arma(V1)
+    dirs, r = raycast.radial(P); _, far = raycast.hits(dirs, P1, F1)
+    lim = np.where(np.isnan(far), r, far - 0.0025); pulled = int((r > lim).sum())
+    P = raycast.CENTRE + dirs * np.minimum(r, lim)[:, None]
+    print(f"  shadow shell: {pulled} of {len(P)} points pulled inside the visible model")
     W = [arma_weights(G[i], V[i]) for i in range(len(V))]
+    W = neck_weights(W, P, np.ones(len(P), bool))
     faces = []; cnt = defaultdict(int)
     twice = defaultdict(int)
     for f in F: twice[frozenset(int(i) for i in f)] += 1

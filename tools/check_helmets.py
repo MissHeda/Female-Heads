@@ -48,7 +48,7 @@ def main():
     helmets = {}
     for p in sorted(glob.glob(os.path.join(REF, "*.npz"))):
         n = os.path.basename(p)[:-4]
-        if n.startswith("Heads_"): continue
+        if n.startswith("Heads_") or n.startswith("tftw"): continue
         d = np.load(p); helmets[n.split("_", 1)[1]] = (d["P"], d["F"])
     van = np.load(os.path.join(REF, "Heads_m_white_01.npz"))
     VP = van["P"]

@@ -49,12 +49,12 @@ drop = {head.vertex_groups[n].index for n in ("FH_p_eye", "FH_p_tongue", "FH_p_t
 bmesh.ops.delete(b, geom=[v for v in b.verts if any(k in drop and v[dl][k] > 0.5 for k in v[dl].keys())], context="VERTS")
 b.to_mesh(me); b.free()
 # a shadow volume must be closed: a coarse voxel shell is manifold by construction (decimating it is not)
-r = ob.modifiers.new("r", "REMESH"); r.mode = "VOXEL"; r.voxel_size = 0.011; r.use_smooth_shade = False; apply(ob, r)
+r = ob.modifiers.new("r", "REMESH"); r.mode = "VOXEL"; r.voxel_size = 0.008; r.use_smooth_shade = False; apply(ob, r)
 b = bmesh.new(); b.from_mesh(ob.data); bmesh.ops.triangulate(b, faces=b.faces[:])
 print("shadow non-manifold edges", sum(1 for e in b.edges if not e.is_manifold))
 bmesh.ops.recalc_face_normals(b, faces=b.faces[:]); b.to_mesh(ob.data); b.free()
 # stay inside the visual model so the head does not shadow itself
-s = ob.modifiers.new("s", "DISPLACE"); s.strength = -0.0025; s.mid_level = 0.0; apply(ob, s)
+s = ob.modifiers.new("s", "DISPLACE"); s.strength = -0.0045; s.mid_level = 0.0; apply(ob, s)
 t = ob.modifiers.new("t", "DATA_TRANSFER"); t.object = head; t.use_vert_data = True; t.data_types_verts = {"VGROUP_WEIGHTS"}
 t.vert_mapping = "POLYINTERP_NEAREST"; t.layers_vgroup_select_src = "ALL"; t.layers_vgroup_select_dst = "NAME"; apply(ob, t)
 dump(ob, "shadow"); bpy.data.meshes.remove(ob.data)

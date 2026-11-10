@@ -43,6 +43,7 @@ top = max(p.z for p in head_pts)
 back = max(p.y for p in head_pts if abs(p.z - eye.z) < 0.05)
 SX = EYE_X / eye.x
 H0 = 0.035                                           # above this height over the eyes the cranium is squashed
+LOW0, CHIN_H, LOW_K, CHIN_FWD = -0.040, -0.108, 1.14, 0.005
 K = (hairline.TOP_Z - EYE_Z - H0) / (top - eye.z - H0)
 SD = min(1.0, (0.0765 - EYE_Y) / (back - eye.y))    # back of the skull inside the vanilla skull
 FIT = {"sx": SX, "k": K, "sd": SD, "eye": list(eye), "top": top}
@@ -51,9 +52,14 @@ print("fit", {k: (round(v, 4) if isinstance(v, float) else v) for k, v in FIT.it
 
 def fit(co):
     """base human (world) -> fitted head space"""
-    h = co.z - eye.z
+    h0 = co.z - eye.z; h = h0
     if h > H0: h = H0 + (h - H0) * K
+    # The vanilla lower face is longer: stretch mouth and chin downwards (below the nose), which also brings the
+    # mouth onto the vanilla lip bones, and bring the chin forward.
+    elif h < LOW0: h = LOW0 + (max(h, CHIN_H) - LOW0) * LOW_K + min(h - CHIN_H, 0.0)
     x, y, z = co.x * SX, EYE_Y + (co.y - eye.y) * SD, EYE_Z + h
+    t_ = lambda e0, e1, v: max(0.0, min(1.0, (v - e0) / (e1 - e0)))
+    y -= CHIN_FWD * t_(-0.055, -0.085, h0) * t_(-0.130, -0.108, h0) * t_(0.040, 0.015, co.y - eye.y) * t_(0.040, 0.022, abs(co.x))
     # the female neck is ~7 mm thinner than the vanilla one: widen it where uniform collars sit
     t = lambda e0, e1, v: max(0.0, min(1.0, (v - e0) / (e1 - e0)))
     w = t(0.625, 0.575, z) * t(-0.060, -0.040, y)
@@ -163,6 +169,55 @@ def clamp_to_vanilla(ob, eye_r, margin_hair=0.0010, margin_skin=0.0003):
     print(f"clamped to the vanilla head: {int((full > 0.0002).sum())} of {len(P)} points pulled in, deepest {full.max() * 1000:.1f} mm")
 
 
+_tp = os.path.join(REPO, "tools", "ref", "models", "tftw_head.npz")
+REFHEAD = np.load(_tp) if os.path.exists(_tp) else None
+
+
+def conform_neck(ob, top=0.615, full=0.585, axis_z=0.010):
+    """Give the neck base the shape of the reference head (tools/ref_tftw.py), so uniforms cover it the same way.
+
+    Below the jaw every point is moved along a horizontal ray from the neck axis onto the reference skin; where
+    the reference has no skin (its chest piece is small) the mesh is cut away. Blends in between `full` and `top`."""
+    if REFHEAD is None:
+        print("no reference head (tools/ref_tftw.py): neck base NOT conformed"); return
+    TP = REFHEAD["P"]; TF_ = REFHEAD["F"]; teye = REFHEAD["eye"]
+    TF_ = TF_[~teye[TF_].any(1)]
+    me = ob.data
+    P = np.array([list(v.co) for v in me.vertices]); A = np.stack([P[:, 0], P[:, 2], P[:, 1]], -1)
+    ci = ob.vertex_groups["FH_p_cavity"].index
+    outer = np.array([not any(g.group == ci and g.weight > 0.5 for g in v.groups) for v in me.vertices])
+    sel = np.nonzero((A[:, 1] < top) & outer)[0]
+    o = np.stack([np.zeros(len(sel)), A[sel, 1], np.full(len(sel), axis_z)], -1)
+    d = A[sel] - o; d[:, 1] = 0; r = np.linalg.norm(d, axis=1); ok = r > 1e-6
+    dirs = d / np.maximum(r, 1e-9)[:, None]
+    _, far = raycast.hits(dirs, TP, TF_, origins=o)
+    t = hairline.smooth(top, full, A[sel, 1])
+    hit = ~np.isnan(far) & ok
+    newr = np.where(hit, r + (far - 0.0004 - r) * t, r)
+    Q = o + dirs * newr[:, None]
+    kill = set(sel[(~hit) & (t > 0.999)].tolist())
+    for i, vi in enumerate(sel):
+        me.vertices[vi].co = Vector((Q[i, 0], Q[i, 2], Q[i, 1]))
+    b = bmesh.new(); b.from_mesh(me); b.verts.ensure_lookup_table()
+    bmesh.ops.delete(b, geom=[b.verts[i] for i in kill], context="VERTS")
+    # drop loose bits the cut left behind
+    seen = set(); comps = []
+    for v in b.verts:
+        if v in seen: continue
+        st = [v]; seen.add(v); c = []
+        while st:
+            a = st.pop(); c.append(a)
+            for e in a.link_edges:
+                o_ = e.other_vert(a)
+                if o_ not in seen: seen.add(o_); st.append(o_)
+        comps.append(c)
+    comps.sort(key=len)
+    big = len(comps[-1])
+    bmesh.ops.delete(b, geom=[v for c in comps[:-1] if len(c) < 0.02 * big for v in c], context="VERTS")
+    b.to_mesh(me); b.free()
+    print(f"neck base conformed: {int(hit.sum())} points moved, {len(kill)} cut away")
+
+
 # ---------------------------------------------------------------- skin
 skin = copy_fitted(base, "FH_head"); cut_skin(skin)
 skin.modifiers.clear(); skin.parent = None
@@ -205,6 +260,8 @@ hair_volume(skin)
 _eo2 = [fit(_eo.matrix_world @ v.co) for v in _eo.data.vertices if (_eo.matrix_world @ v.co).x > 0]
 EYE_R0 = (max(p.z for p in _eo2) - min(p.z for p in _eo2)) / 2
 clamp_to_vanilla(skin, EYE_R0)
+conform_neck(skin)
+me = skin.data
 high = new_obj("FH_high", me.copy())
 for g in skin.vertex_groups: high.vertex_groups.new(name=g.name)
 sub = high.modifiers.new("sub", "SUBSURF"); sub.levels = 1; apply_mod(high, sub)
@@ -277,11 +334,11 @@ teeth.data.uv_layers[0].name = "src"; mark(teeth, "FH_p_teeth"); parts.append(te
 
 # ---------------------------------------------------------------- bun
 SP = np.array([list(v.co) for v in skin.data.vertices])
-# Low bun at the nape: the vanilla helmets end at height 0.64-0.66 at the back, the bun stays below that.
-bz = EYE_Z - 0.094
+# Bun at the back of the head, at the height of the reference head's bun.
+bz = EYE_Z - 0.044
 m = (np.abs(SP[:, 2] - bz) < 0.010) & (np.abs(SP[:, 0]) < 0.02)
 backy = SP[m, 1].max()
-RX, RY, RZ = 0.031, 0.018, 0.0215
+RX, RY, RZ = 0.035, 0.023, 0.033
 bb = bmesh.new(); buv = bb.loops.layers.uv.new("src")
 bmesh.ops.create_uvsphere(bb, u_segments=32, v_segments=16, radius=1.0)
 for v in bb.verts:
@@ -300,9 +357,9 @@ for f in bb.faces:
 bmesh.ops.recalc_face_normals(bb, faces=bb.faces[:])
 bme = bpy.data.meshes.new("FH_bun"); bb.to_mesh(bme); bb.free()
 bun = new_obj("FH_tmp_bun", bme)
-for v in bme.vertices: v.co += Vector((0, backy + RY * 0.33, bz))
+for v in bme.vertices: v.co += Vector((0, backy + RY * 0.42, bz))
 mark(bun, "head"); mark(bun, "FH_p_bun"); parts.append(bun)
-BUN = [0.0, backy + RY * 0.33, bz]
+BUN = [0.0, backy + RY * 0.42, bz]
 
 # ---------------------------------------------------------------- join + atlas
 for o in sc.objects: o.select_set(False)

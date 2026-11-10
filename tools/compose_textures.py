@@ -20,9 +20,9 @@ MPFB = os.path.join(os.environ["APPDATA"], "Blender Foundation", "Blender", "5.2
 L = json.load(open(os.path.join(B, "landmarks.json")))
 PART = L["parts"]; EYE = np.array(L["eye_l"]); BUN = np.array(L["bun"]); MOUTH_Z = L["mouth_z"]
 TONES = {
-    "light": dict(skin=("young_caucasian_female", "young_lightskinned_female_diffuse.png"), eye="green_eye.png",
+    "light": dict(skin=("young_caucasian_female", "young_lightskinned_female_diffuse.png"), eye="green_eye.png", level=(0.585, 0.420, 0.370),
                   hair=((0.085, 0.052, 0.035), (0.30, 0.20, 0.125)), lip=(0.70, 0.36, 0.37), lipk=0.42, eyesat=0.55),
-    "dark": dict(skin=("young_african_female", "young_darkskinned_female_diffuse.png"), eye="brown_eye.png",
+    "dark": dict(skin=("young_african_female", "young_darkskinned_female_diffuse.png"), eye="brown_eye.png", level=(0.330, 0.215, 0.175),
                  hair=((0.030, 0.024, 0.022), (0.12, 0.095, 0.08)), lip=(0.45, 0.20, 0.21), lipk=0.30, freckle=0.0),
 }
 
@@ -98,8 +98,43 @@ bun = is_["bun"]
 fine = np.where(bun, bfine, fine); clump = np.where(bun, bclump, clump)
 hair_a = np.where(bun, 1.0, hair_a)
 strand = np.clip(0.5 + 0.30 * fine + 0.22 * clump + 0.05 * along, 0, 1)
+
+# Photographic hair detail from the reference head (tools/ref_tftw.py): a patch of combed-back hair, tiled along
+# the strands, and the photo of a bun. Only the brightness pattern is used, the colour stays per skin tone.
+REFTEX = os.path.join(HERE, "ref", "tex")
+photo = None
+if os.path.exists(os.path.join(REFTEX, "tftw_face.png")) and os.path.exists(os.path.join(REFTEX, "tftw_hair.png")):
+    def lum(im):
+        a = np.asarray(im.convert("RGB"), dtype=np.float64) / 255; return a @ np.array([0.30, 0.59, 0.11])
+    fa = Image.open(os.path.join(REFTEX, "tftw_face.png"))
+    sx_ = fa.size[0] / 1024.0
+    patch_ = lum(fa.crop((int(335 * sx_), int(18 * sx_), int(560 * sx_), int(200 * sx_))))
+    soft = np.asarray(Image.fromarray((np.clip(patch_, 0, 1) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(14 * sx_)), dtype=np.float64) / 255
+    D = np.clip(patch_ / np.maximum(soft, 0.02), 0.3, 2.5)                       # strand detail without the big shading
+    # straighten the strands: in the photo the hair fans out a little, tiled as it is that reads as wood grain.
+    # Shift every row (wrapping around) so it lines up with the rows above.
+    Dn = D - D.mean(1, keepdims=True); rows = [D[0]]; prev = Dn[0]; cum = 0
+    for r_ in range(1, D.shape[0]):
+        ds = max(range(-2, 3), key=lambda s_: float((np.roll(Dn[r_], cum + s_) * prev).sum()))
+        cum += ds
+        rows.append(np.roll(D[r_], cum)); prev = 0.7 * prev + 0.3 * np.roll(Dn[r_], cum)
+    D = np.array(rows)
+    ph, pw = D.shape
+    MM = 0.00034 / sx_                                                           # metres per texel of the patch
+    across = psi * 0.085; dist = np.linalg.norm(P - BUN, axis=-1)
+    def refl(v, n):
+        v = np.mod(v, 2 * n); return np.where(v >= n, 2 * n - 1 - v, v).astype(int)
+    scalp_d = D[refl(dist / MM / 3.0, ph), refl(across / MM, pw)]               # stretched along the strands
+    scalp_d = 0.65 * scalp_d + 0.35 * (1.0 + 0.45 * fine)                         # plus fine single strands
+    bi = Image.open(os.path.join(REFTEX, "tftw_hair.png")); bw_, bh_ = bi.size
+    bl_ = lum(bi)
+    cx, cy, rad = 0.470 * bw_, 0.520 * bh_, 0.385 * bw_
+    ix = np.clip(cx + bu / 0.48 * rad, 0, bw_ - 1).astype(int); iy = np.clip(cy - bv / 0.48 * rad, 0, bh_ - 1).astype(int)
+    bun_l = bl_[iy, ix]; bun_d = bun_l / max(bl_[int(cy - rad * 0.6):int(cy + rad * 0.6), int(cx - rad * 0.6):int(cx + rad * 0.6)].mean(), 1e-3)
+    photo = np.where(bun, np.clip(bun_d, 0.1, 3.0), scalp_d)
+    strand = np.clip(0.42 + (photo - 1.0) * np.where(bun, 0.38, 0.95) + 0.10 * clump, 0, 1)
 _root = np.where(bun, 1.0, smooth(0.0, 0.014, z - hairline.hairline_height(P)))
-hair_h = (0.35 * fine + 0.30 * clump) * hair_a * (0.35 + 0.65 * _root)   # height field for the normal map, calmer at the hairline
+hair_h = ((strand - 0.5) * 1.3 if photo is not None else (0.35 * fine + 0.30 * clump)) * hair_a * (0.35 + 0.65 * _root)   # height field for the normal map, calmer at the hairline
 
 # ------------------------------------------------------------------ face features in head space
 front = smooth(-0.15, -0.55, N[..., 1])                      # facing forward
@@ -159,6 +194,10 @@ def compose(tone, cfg, detail=None):
     col = lerp(col, col * 0.6 + np.array(cfg["lip"]) * 0.4, lipm * cfg["lipk"])
     col = lerp(col, col * np.array([0.62, 0.52, 0.50]), shadow)
     base, tip = np.array(cfg["hair"][0]), np.array(cfg["hair"][1])
+    # bring the skin to the level the head material expects (measured on the reference head's face texture)
+    cheek = skinp & (y < -0.07) & (z > EYE[2] - 0.045) & (z < EYE[2] - 0.010) & (ax > 0.022) & (ax < 0.050)
+    gain = np.array(cfg["level"]) / col[cheek].mean(0)
+    col = np.where((skinp | is_["cavity"])[..., None], np.clip(col * gain, 0, 1), col)
     col = lerp(col, np.broadcast_to(base * 0.9, P.shape), lash)
     col = lerp(col, np.broadcast_to(base * 1.25, P.shape), brow * 0.85)
     # parts with their own source image
@@ -202,17 +241,19 @@ def others():
     Image.fromarray((n * 255 + 0.5).astype(np.uint8)).save(os.path.join(OUT, "fh_nohq.png"))
     # ---- smdi: R = 1, G specular, B glossiness
     tz = np.exp(-((x / 0.018) ** 2)) * front * 0.06               # nose and forehead a touch shinier
-    g = (0.26 + tz + 0.03 * mottle) * skinp
-    bl = 0.34 * skinp
-    g = g * (1 - lips) + 0.40 * lips; bl = bl * (1 - lips) + 0.50 * lips
-    g = g * (1 - hair_a) + (0.16 + 0.26 * strand) * hair_a; bl = bl * (1 - hair_a) + 0.58 * hair_a
-    for m, gs, bs in ((eyes, 0.9, 0.92), (is_["teeth"], 0.6, 0.7), (is_["tongue"], 0.55, 0.6), (is_["cavity"], 0.35, 0.5)):
+    # vanilla head speculars are very low (green around 0.06-0.09), anything higher looks wet
+    g = (0.070 + tz * 0.5 + 0.010 * mottle) * skinp
+    bl = 0.50 * skinp
+    g = g * (1 - lips) + 0.14 * lips; bl = bl * (1 - lips) + 0.60 * lips
+    g = g * (1 - hair_a) + (0.06 + 0.10 * strand) * hair_a; bl = bl * (1 - hair_a) + 0.55 * hair_a
+    for m, gs, bs in ((eyes, 0.45, 0.90), (is_["teeth"], 0.25, 0.70), (is_["tongue"], 0.20, 0.60), (is_["cavity"], 0.08, 0.50)):
         g = np.where(m, gs, g); bl = np.where(m, bs, bl)
-    smdi = np.stack([np.ones_like(g), g, bl], -1); smdi[~covered] = (1, 0.26, 0.34)
+    smdi = np.stack([np.ones_like(g), g, bl], -1); smdi[~covered] = (1, 0.07, 0.50)
     Image.fromarray((np.clip(smdi, 0, 1) * 255 + 0.5).astype(np.uint8)).save(os.path.join(OUT, "fh_smdi.png"))
     # ---- ambient shadow
-    a = np.clip(AO * 1.08, 0, 1); a = np.where(eyes, np.maximum(a, 0.85), a); a[~covered] = 1
-    Image.fromarray((np.stack([a, a, a], -1) * 255 + 0.5).astype(np.uint8)).save(os.path.join(OUT, "fh_as.png"))
+    # only green is read; vanilla head maps average about 0.65 there (ours was 0.9: too much ambient light)
+    a = np.clip(AO, 0, 1) ** 1.5 * 0.78; a = np.where(eyes, np.maximum(a, 0.62), a); a[~covered] = 0.7
+    Image.fromarray((np.stack([np.ones_like(a), a, np.ones_like(a)], -1) * 255 + 0.5).astype(np.uint8)).save(os.path.join(OUT, "fh_as.png"))
     # ---- wound macro map (blended over the skin by its alpha): blood on brow, cheek, nose and lip
     spots = [((0.030, -0.105, EYE[2] + 0.030), 0.020), ((-0.045, -0.085, EYE[2] - 0.035), 0.024),
              ((0.004, -0.120, EYE[2] - 0.040), 0.012), ((-0.012, -0.105, MOUTH_Z - 0.004), 0.011), ((0.060, -0.040, EYE[2] + 0.010), 0.02)]

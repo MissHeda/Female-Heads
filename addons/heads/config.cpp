@@ -41,6 +41,7 @@ class CfgFaces {
             disabled = 0;
         };
         class mhfh_female_bun_dark: mhfh_female_bun_light {
+            author = "Miss Heda";
             displayName = "Female, Bun (Dark)";
             texture = "\z\mhfh\addons\heads\data\fh_dark_co.paa";
             material = "\z\mhfh\addons\heads\data\fh_dark.rvmat";
