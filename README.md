@@ -23,6 +23,9 @@ Every character comes with a bun or a braid, each also as a "(Tactical)" variant
 
 Pick them in the Arsenal (Face) or with `player setFace "mhfh_walsh"` / `"mhfh_walsh_tac"`.
 
+Two more hair styles are being tried out on Fraser only: a French braid (`mhfh_fraser_french`) and a low
+ponytail (`mhfh_fraser_ponytail`), each with its Tactical version.
+
 ## Braid and headgear
 
 The braid starts high on the back of the head and comes out through the opening of a baseball cap. Under a
@@ -40,9 +43,22 @@ like any CBA setting.
 | Headgear worn with the braid | `H_Cap_red, H_Cap_headphones` | Class names; classes inheriting from them count too. Covers all caps |
 | Headgear worn with the bun | empty | Class names; goes before the braid list |
 
+An entry with `*` or `?` in it is a pattern for the class name itself (`*` any text, `?` one character, case
+does not matter): `H_Cap_*`, `*Beret*`, `H_Helmet?_*`.
+
 **Other mods:** headgear can ask for the braid itself with `mhfh_keepBraid = 1;` in its `CfgWeapons` class.
 Faces that come with a bun and with a braid take part when they name each other in `CfgFaces`:
 `mhfh_bunFace = "<bun face>";` in the braid face, `mhfh_braidFace = "<braid face>";` in the bun face.
+
+## Camo cream
+
+With ACE3 loaded the self interaction menu has "Apply camo cream" and "Remove camo cream" under Equipment
+(`addons/camo`): they switch a character between her face and its Tactical version, after a few seconds shown
+as a progress bar. Settings (server): the time it takes and a switch for the actions. Without ACE3 the faces are
+simply picked as usual.
+
+Faces of other mods take part with `mhfh_camoFace = "<painted face>";` in the plain face and
+`mhfh_plainFace = "<plain face>";` in the painted one.
 
 ## How they are made
 
@@ -62,7 +78,9 @@ repository). `tools/characters.py` then writes everything in `addons/heads`:
   lips, brow). Skull, ears, neck, eye region, UVs and bone weights stay as they are, so helmets, uniforms and the
   face animations behave exactly like on the original head. For the braid variant the bun is taken off and a
   braid is added (`tools/braid.py`): gathered hair, a hair tie, three strands plaited around each other, a second
-  tie and the loose end, weighted to head, neck and upper spine.
+  tie and the loose end. Hair cannot move by itself in the game, so it is shaped the way it would hang on
+  someone standing upright, and only its first centimetres follow the head: the rest follows neck and upper
+  spine and stays on the back when the head turns. The same file builds the French braid and the ponytail.
 - **Shadow:** `tools/shadow.py` repairs the shadow volume of the Timberwolf head, which throws dark streaks on
   the neck: three triangles that exist twice are removed, the points below the jaw get the bone weights of the
   visible surface next to them, and points outside the visible surface are moved inside.

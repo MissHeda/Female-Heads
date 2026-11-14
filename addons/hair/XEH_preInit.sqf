@@ -7,7 +7,9 @@ ADDON = false;
 // Headgear classes as typed into the two text settings, and what was found out about every
 // headgear class asked about so far.
 GVAR(braidClasses) = [];
+GVAR(braidPatterns) = [];
 GVAR(bunClasses) = [];
+GVAR(bunPatterns) = [];
 GVAR(styleCache) = createHashMap;
 
 // All of these are the player's own settings (a server or mission can still force them, as

@@ -5,13 +5,13 @@
             <English>Headgear worn with the braid</English>
         </Key>
         <Key ID="STR_mhfh_hair_SETTING_BraidHeadgear_DESC">
-            <English>Class names of the headgear the\ncharacter wears her braid with,\nseparated by commas.\n\nEverything that inherits from one of\nthem counts as well.\n\nDefault: the baseball caps, where the\nbraid comes out through the opening\nat the back.</English>
+            <English>Class names of the headgear the\ncharacter wears her braid with,\nseparated by commas.\n\nEverything that inherits from one of\nthem counts as well.\n\nWith * and ? an entry is a pattern\nfor the class name, for example\nH_Cap_* or *Beret*.\n\nDefault: the baseball caps, where the\nbraid comes out through the opening\nat the back.</English>
         </Key>
         <Key ID="STR_mhfh_hair_SETTING_BunHeadgear">
             <English>Headgear worn with the bun</English>
         </Key>
         <Key ID="STR_mhfh_hair_SETTING_BunHeadgear_DESC">
-            <English>Class names of the headgear the\ncharacter wears her bun with,\nseparated by commas.\n\nEverything that inherits from one of\nthem counts as well. This list goes\nbefore the one for the braid.</English>
+            <English>Class names of the headgear the\ncharacter wears her bun with,\nseparated by commas.\n\nEverything that inherits from one of\nthem counts as well.\n\nWith * and ? an entry is a pattern\nfor the class name, for example\nH_Helmet* or *_hs.\n\nThis list goes before the one for\nthe braid.</English>
         </Key>
         <Key ID="STR_mhfh_hair_SETTING_Category">
             <English>MH Female Heads</English>

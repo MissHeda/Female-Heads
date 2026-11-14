@@ -7,6 +7,11 @@
 - The hair follows the headgear: bun under helmets, braid with caps. What happens without headgear, with
   listed headgear and with everything else is set per player in the CBA settings. Needs CBA_A3 now.
 - The hair gathered at the start of the braid stands up from the head a little; larger hair tie.
+- The braid hangs closer to head and neck and stays on the back when the head turns.
+- Headgear lists take patterns with * and ?.
+- With ACE3: "Apply camo cream" and "Remove camo cream" in the self interaction menu.
+- Two hair styles to try out on Fraser: French braid and low ponytail.
+- Face paint thins out around the ears instead of stopping at them.
 - No more dark streaks on the neck: repaired shadow volume.
 - Arms and legs have the tone of the neck.
 - Eyes keep the brightness of the photographed ones, no more glowing iris.

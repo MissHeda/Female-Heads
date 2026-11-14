@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project name="mhfh">
+    <Package name="camo">
+        <Key ID="STR_mhfh_camo_Apply">
+            <English>Apply camo cream</English>
+        </Key>
+        <Key ID="STR_mhfh_camo_Applying">
+            <English>Applying camo cream...</English>
+        </Key>
+        <Key ID="STR_mhfh_camo_Remove">
+            <English>Remove camo cream</English>
+        </Key>
+        <Key ID="STR_mhfh_camo_Removing">
+            <English>Removing camo cream...</English>
+        </Key>
+        <Key ID="STR_mhfh_camo_SETTING_Duration">
+            <English>Time to apply or remove</English>
+        </Key>
+        <Key ID="STR_mhfh_camo_SETTING_Duration_DESC">
+            <English>Seconds it takes to put camo cream\non or to take it off.\n\n0: at once, without a progress bar.</English>
+        </Key>
+        <Key ID="STR_mhfh_camo_SETTING_Enabled">
+            <English>Camo cream actions</English>
+        </Key>
+        <Key ID="STR_mhfh_camo_SETTING_Enabled_DESC">
+            <English>Adds "Apply camo cream" and "Remove\ncamo cream" to the ACE self\ninteraction menu (Equipment).\n\nThey switch a character between her\nface and its Tactical version.\nNeeds ACE3.</English>
+        </Key>
+        <Key ID="STR_mhfh_camo_SETTING_SubCategory">
+            <English>Camo cream</English>
+        </Key>
+    </Package>
+</Project>

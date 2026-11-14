@@ -26,7 +26,7 @@ out = nt.nodes.new("ShaderNodeOutputMaterial"); bs = nt.nodes.new("ShaderNodeBsd
 nt.links.new(bs.outputs[0], out.inputs[0]); nt.links.new(tx.outputs[0], bs.inputs["Base Color"]); bs.inputs["Roughness"].default_value = 0.62
 
 for suffix in SUFFIXES:
-    model_suffix = "_braid" if "braid" in suffix else ""
+    model_suffix = suffix.replace("_tac", "")
     for cid in IDS:
         d = np.load(os.path.join(C, f"mhfh_{cid}{model_suffix}.npz")); P, F, uv = d["P"], d["F"], d["uv"]
         me = bpy.data.meshes.new("head")

@@ -38,6 +38,17 @@ S_PALE, S_FAIR, S_BASE, S_TAN, S_OLIVE, S_BROWN, S_DARK = (0.665, 0.505, 0.460),
     (0.515, 0.350, 0.280), (0.490, 0.345, 0.265), (0.365, 0.235, 0.180), (0.285, 0.192, 0.152)
 
 # shape: millimetres (jaw, chin, chin_fwd, nose_len, nose_up, cheek, lips, brow) and a relative nose width
+# hair styles besides the bun: suffix of models, textures and classes -> name shown in the game. Every character
+# has the braid; the others are tried out on single characters first.
+STYLES = {"braid": "Braid", "french": "French Braid", "ponytail": "Ponytail"}
+EXTRA_STYLES = {"fraser": ("french", "ponytail")}
+
+
+def styles(ch):
+    """the hair styles of a character: "" is the bun"""
+    return ("", "braid") + tuple(EXTRA_STYLES.get(ch["id"], ()))
+
+
 CHARS = [
     dict(id="kovacs", name="Kovacs", base=1, hair=BLACK, skin=S_PALE, eyes=E_GREY, freckles=0.0,
          shape=dict(jaw=-1.8, chin=1.2, chin_fwd=0.6, nose_w=-0.07, nose_len=0.8, nose_up=0.4, cheek=1.2, lips=0.5, brow=0.0)),
@@ -121,7 +132,12 @@ def paint_layer(m):
     paint = lerp(paint, np.clip(colour, 0, 1), np.maximum(more, np.clip((more - a) / np.maximum(more, 1e-3), 0, 1)) * (more > 0))   # over their pale dabs too
     a = np.maximum(a, more)
     rest = rest * (1 - more)[..., None]
-    a[:140, :230] = 0.0                                              # the ears (their own corner of the texture) stay bare
+    # The ears: nearly bare, but not cut out. Paint thins out towards each ear over the skin around it and goes on
+    # for a bit onto the ear itself, with a ragged edge, as it does when it is put on with the fingers. The ears
+    # have their own corner of the texture; the distance is taken on the head, so the edge runs across that seam.
+    ear_at = np.stack([np.sign(x) * 0.074, np.full(x.shape, 0.684), np.full(x.shape, 0.004)], -1)
+    far = np.linalg.norm((pos - ear_at) * np.array([1.0, 0.75, 1.0]), axis=-1) + 0.006 * sine_noise(pos, 300.0, 12, 8, (0.6, 1.6))
+    a = a * smooth(0.014, 0.031, far)
     # It ends before the hair begins, with a ragged edge: paint right up to the hairline all the way round looks
     # like a mask.
     a = a * smooth(0.30, 0.05, blurf(m["hair"], 16) + 0.09 * sine_noise(pos, 260.0, 9, 8, (0.6, 1.6)))
@@ -132,7 +148,7 @@ def paint_layer(m):
 BUN_AT, BRAID_AT = (0.665, 0.080), (0.727, 0.078)       # (height, depth): where the bun sat, where the braid starts
 
 
-def hair_to_braid(m, hlum):
+def hair_to_braid(m, hlum, at=None):
     """The photographed hair runs to the bun. For the braid it has to run to the start of the braid, 6 cm higher.
     The hair is laid out flat (around the head, down the head) and changed there:
       1. the spot the bun covered (photographed dark, with a rim) is filled with the hair around it, mirrored at
@@ -143,7 +159,10 @@ def hair_to_braid(m, hlum):
     pos, cov = m["pos"], m["cov"]; x, y, z = pos[..., 0], pos[..., 1], pos[..., 2]
     RHO, CY, R1 = 0.085, 0.700, 0.047
     th = np.arctan2(x, z); s = th * RHO; t = np.arctan2(np.hypot(x, z), y - CY) * RHO
-    tb = math.atan2(BUN_AT[1], BUN_AT[0] - CY) * RHO; tr = math.atan2(BRAID_AT[1], BRAID_AT[0] - CY) * RHO
+    # at: where the hair is gathered. The default is the start of the braid; for the styles gathered where the bun
+    # was (or not gathered at all) nothing is moved, only the spot of the bun is filled.
+    at = at or BRAID_AT
+    tb = math.atan2(BUN_AT[1], BUN_AT[0] - CY) * RHO; tr = math.atan2(at[1], at[0] - CY) * RHO
     head = cov & ~m["bun"] & (np.abs(th) < 2.0)
     k = np.clip(1 - (s / 0.11) ** 2 - ((t - tr) / np.where(t < tr, 0.085, 0.125)) ** 2, 0, 1) ** 2 * head
     G = 0.00025; S0 = -0.18; W, H = int(0.36 / G), int(0.27 / G)
@@ -215,6 +234,8 @@ def hair_to_braid(m, hlum):
 
 
 def face_texture(ch, tactical=False, braid=False):
+    """braid: False for the bun, True or "braid" for the braid, or another hair style"""
+    style = "braid" if braid is True else (braid or "")
     m = masks(ch["base"]); tex = m["tex"]; lum = m["lum"]; pos = m["pos"]
     x, y, z = pos[..., 0], pos[..., 1], pos[..., 2]; ax = np.abs(x)
     skin, hair = m["skin"], m["hair"]
@@ -253,9 +274,9 @@ def face_texture(ch, tactical=False, braid=False):
         warm = 1 + light * np.array([-0.10, 0.0, 0.20])
         shine = np.clip(rel - 0.55, 0, 1.3) ** 1.3 if strand is None else 0.9 * np.clip(strand - 0.80, 0, 1.4) ** 1.2
         return np.minimum(ht * rel[..., None] ** ((0.80 - 0.30 * light) * warm), 0.94) + sheen * shine[..., None]
-    if braid: hlum = hair_to_braid(m, hlum)              # the hair runs to the start of the braid, not to the bun
+    if style: hlum = hair_to_braid(m, hlum, None if style == "braid" else BUN_AT)   # the hair runs to the start of the braid, not to the bun
     out = lerp(out, np.clip(recolour(hlum, strand=hlum / np.maximum(blurf(hlum, 14), 0.015)), 0, 1), hair)
-    if braid:                                            # the braid's hair goes where the bun's texture was
+    if style:                                            # the hanging hair goes where the bun's texture was
         strips, tie = braidlib.textures()
         for (x0, x1, y0, y1), row in strips:
             # on dark hair only the highlights of the head reach the hair colour: the braid is as dark as the rest
@@ -329,6 +350,7 @@ _SRC = []
 
 
 def write_model(ch, braid=False):
+    style = "braid" if braid is True else (braid or "")
     if not _SRC: _SRC.append(bytes(shadow.fix(open(SRC_P3D, "rb").read(), verbose=True)))
     b, lods = mlod.read_bytes(_SRC[0])
     newp, newn = {}, {}
@@ -337,15 +359,15 @@ def write_model(ch, braid=False):
         Pn = morph(L.points, ch["shape"])
         newp[L.index] = Pn; newn[L.index] = mlod.updated_normals(L, L.points, Pn)
     b = mlod.patch(b, lods, newp, newn)
-    name = f"mhfh_{ch['id']}{'_braid' if braid else ''}"
+    name = f"mhfh_{ch['id']}{'_' + style if style else ''}"
     tex = PREFIX + f"data\\{name}_co.paa"; mat = PREFIX + "data\\mhfh_face.rvmat"
-    if braid:                                            # take the bun off the first LOD and hang the braid there
+    if style:                                            # take the bun off the first LOD and hang the hair there
         _, lods2 = mlod.read_bytes(bytes(b)); L = lods2[0]
         bun = L.selections["Bun"][0] > 0; like = int(np.nonzero(bun)[0][0])
         fv = np.clip(L.face_v, 0, L.npoints - 1)
         isbun = np.array([bun[fv[f, :L.face_n[f]]].all() for f in range(L.nfaces)])
         # the braid goes in first (it needs a bun point as its pattern), then the bun faces come off
-        P, N, faces, weights = braidlib.braid_mesh()
+        P, N, faces, weights = braidlib.mesh(style)
         b = braidlib.append(b, 0, P, N, faces, weights, tex, mat, like)
         _, lods3 = mlod.read_bytes(bytes(b)); L3 = lods3[0]
         keep = np.ones(L3.nfaces, bool); keep[:len(isbun)] = ~isbun
@@ -394,15 +416,17 @@ def write_config():
     heads = "".join(f'''    class mhfh_{c["id"]}{v}: bun_female_bun_01 {{
         model = "\\{PREFIX}models\\mhfh_{c["id"]}{v}.p3d";
     }};
-''' for c in CHARS for v in ("", "_braid"))
+''' for c in CHARS for v in ("_" + s if s else "" for s in styles(c)))
     faces = ""
     for c in CHARS:
-        for v, tac in (("", False), ("", True), ("_braid", False), ("_braid", True)):
+        for v, tac in ((("_" + s if s else ""), t) for s in styles(c) for t in (False, True)):
             cls = f'mhfh_{c["id"]}{v}{"_tac" if tac else ""}'
-            label = ", ".join(([] if not v else ["Braid"]) + ([] if not tac else ["Tactical"]))
+            label = ", ".join(([] if not v else [STYLES[v[1:]]]) + ([] if not tac else ["Tactical"]))
             # the same character with the other hair, for the change with the headgear (addons/hair)
             bun = (f'            mhfh_bunFace = "mhfh_{c["id"]}{"_tac" if tac else ""}";\n' if v else
                    f'            mhfh_braidFace = "mhfh_{c["id"]}_braid{"_tac" if tac else ""}";\n')
+            # the same face with and without face paint, for the camo cream action (addons/camo)
+            camo = (f'            mhfh_plainFace = "mhfh_{c["id"]}{v}";\n' if tac else f'            mhfh_camoFace = "mhfh_{c["id"]}{v}_tac";\n')
             faces += f'''        class {cls}: B_female_bun_01 {{
             author = "Miss Heda";
             displayName = "{c["name"]}{" (" + label + ")" if label else ""}";
@@ -415,7 +439,7 @@ def write_config():
             materialHL = "{D}mhfh_hl.rvmat";
             textureHL2 = "{D}mhfh_{c["id"]}_hl_co.paa";
             materialHL2 = "{D}mhfh_hl.rvmat";
-{bun}        }};
+{bun}{camo}        }};
 '''
     cfg = f'''// Generated by tools/characters.py
 class CfgPatches {{
@@ -470,18 +494,19 @@ class CfgFaces {{
 		};
 		skeletonName = "OFP2_ManSkeleton";
 	};
-''' + "".join(f"\tclass mhfh_{c['id']}{v}: ArmaMan {{}};\n" for c in CHARS for v in ("", "_braid")) + "};\n"
+''' + "".join(f"\tclass mhfh_{c['id']}{'_' + s if s else ''}: ArmaMan {{}};\n" for c in CHARS for s in styles(c)) + "};\n"
     open(mc, "w", encoding="utf8", newline="\n").write(s)
 
 
 def main():
     for c in CHARS:
-        t, fit = face_texture(c); save_paa(t, f"mhfh_{c['id']}_co")
-        save_paa(face_texture(c, tactical=True)[0], f"mhfh_{c['id']}_tac_co")
-        save_paa(face_texture(c, braid=True)[0], f"mhfh_{c['id']}_braid_co")
-        save_paa(face_texture(c, tactical=True, braid=True)[0], f"mhfh_{c['id']}_braid_tac_co")
+        for s in styles(c):
+            v = "_" + s if s else ""
+            t, f = face_texture(c, braid=s); save_paa(t, f"mhfh_{c['id']}{v}_co")
+            if not s: fit = f
+            save_paa(face_texture(c, tactical=True, braid=s)[0], f"mhfh_{c['id']}{v}_tac_co")
+            write_model(c, braid=s)
         save_paa(hands_texture(c, fit), f"mhfh_{c['id']}_hl_co")
-        write_model(c); write_model(c, braid=True)
         print(c["name"], "done")
     write_config()
     # reshaped reference points for previews and checks
