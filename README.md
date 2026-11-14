@@ -88,8 +88,9 @@ repository). `tools/characters.py` then writes everything in `addons/heads`:
   face animations behave exactly like on the original head. For the braid variant the bun is taken off and a
   braid is added (`tools/braid.py`): gathered hair, a hair tie, three strands plaited around each other, a second
   tie and the loose end. Hair cannot move by itself in the game, so it is shaped the way it would hang on
-  someone standing upright, and only its first centimetres follow the head: the rest follows neck and upper
-  spine and stays on the back when the head turns.
+  someone standing upright. It belongs to the head for most of its weight (all of it at the tie, 60 % at the
+  tip, the rest to the neck): when the head turns, its root swings round with the back of the head and the braid
+  hangs from there, as a real one does. When the head nods it tilts along, which the share of the neck softens.
 - **Shadow:** `tools/shadow.py` repairs the shadow volume of the Timberwolf head, which throws dark streaks on
   the neck: three triangles that exist twice are removed, the points below the jaw get the bone weights of the
   visible surface next to them, and points outside the visible surface are moved inside.

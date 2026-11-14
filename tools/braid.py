@@ -6,8 +6,8 @@ hair tie and the loose end.
 
 Hair cannot move by itself in the game, so it is shaped the way it would hang on someone standing upright: it
 leaves the head pointing down, not out, stays close to head and neck and lies on the back. Where it is gathered,
-the tie and the first centimetres belong to the head; the rest follows neck and upper spine, so it stays on the
-back when the head turns instead of swinging out with it.
+the tie and the first centimetres belong to the head entirely and the rest mostly, so the braid swings round with the
+back of the head when it turns and hangs from there, as a real one does.
 
 mesh() builds the geometry (Arma model space: x, height, depth; the back of the head is +z), its UVs into the
 atlas area the bun used, and bone weights. append() adds it to a LOD of an MLOD file (the bun faces are dropped
@@ -68,12 +68,15 @@ class _Line:
 def _weights(y, along=None):
     """along: distance from where the hair is tied, None for hair that belongs to the head entirely"""
     if along is None: return {"Head": 1.0}
-    # The braid follows the chain of bones the head hangs on, one after the other and each over a long stretch:
-    # head, upper neck, lower neck, and only at its very end a little of the upper spine. When the head turns,
-    # every one of them turns a part of the way, so the braid bends evenly along its length. Going from head
-    # to spine in a few centimetres put all of the turn into one spot and kinked it there.
-    upper = _smooth(0.015, 0.075, along); lower = _smooth(0.085, 0.150, along); spine = 0.35 * _smooth(0.165, 0.215, along)
-    w = {"Head": 1.0 - upper, "Neck1": upper * (1.0 - lower), "Neck": lower * (1.0 - spine), "Spine3": lower * spine}
+    # The braid belongs to the head for most of its weight, all the way down. What a head does most is turn left
+    # and right, and for that this is what a real braid does: its root swings round with the back of the head and
+    # the braid hangs straight down from wherever the root is. Holding its lower part on the neck or the spine
+    # instead (tried: head to spine within a few centimetres, then a chain head - upper neck - lower neck -
+    # spine) leaves that part behind in the middle of the back, and the braid is dragged across, twisted and
+    # pinched thin. The price is nodding: the braid tilts with the head, so a part of it goes to the neck further
+    # down (up to 40 % at the tip), which takes that tilt back a little without holding the tip in place.
+    neck = 0.40 * _smooth(0.030, 0.212, along); low = 0.35 * _smooth(0.120, 0.212, along)
+    w = {"Head": 1.0 - neck, "Neck1": neck * (1.0 - low), "Neck": neck * low}
     return {k: v for k, v in w.items() if v > 0.004}
 
 
