@@ -10,7 +10,7 @@
 - The braid hangs closer to head and neck and stays on the back when the head turns.
 - Headgear lists take patterns with * and ?.
 - With ACE3: "Apply camo cream" and "Remove camo cream" in the self interaction menu.
-- Three hair styles to try out on Fraser: low ponytail, braided bun and donut bun.
+- Two hair styles to try out on Fraser: low ponytail and braided bun.
 - Face paint thins out around the ears instead of stopping at them.
 - Classes renamed to `MHF_Female_<Name>_<Style>[_Tactical]`; the bun is named in the display name too, so every
   style is followed by its Tactical version in the arsenal. The Timberwolf faces are listed the same way.

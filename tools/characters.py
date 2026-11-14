@@ -40,11 +40,11 @@ S_PALE, S_FAIR, S_BASE, S_TAN, S_OLIVE, S_BROWN, S_DARK = (0.665, 0.505, 0.460),
 # shape: millimetres (jaw, chin, chin_fwd, nose_len, nose_up, cheek, lips, brow) and a relative nose width
 # hair styles: suffix of models and textures (none for the bun) -> name shown in the game. Every character
 # has the braid; the others are tried out on single characters first.
-STYLES = {"": "Bun", "braid": "Braid", "ponytail": "Ponytail", "braidedbun": "Braided Bun", "donutbun": "Donut Bun"}
-STYLE_CLASS = {"": "Bun", "braid": "Braid", "ponytail": "Ponytail", "braidedbun": "BraidedBun", "donutbun": "DonutBun"}   # in class names
-EXTRA_STYLES = {"fraser": ("ponytail", "braidedbun", "donutbun")}
+STYLES = {"": "Bun", "braid": "Braid", "ponytail": "Ponytail", "braidedbun": "Braided Bun"}
+STYLE_CLASS = {"": "Bun", "braid": "Braid", "ponytail": "Ponytail", "braidedbun": "BraidedBun"}   # in class names
+EXTRA_STYLES = {"fraser": ("ponytail", "braidedbun")}
 # styles that are buns: under headgear they stay as they are where the settings ask for a bun (addons/hair)
-BUN_STYLES = ("braidedbun", "donutbun")
+BUN_STYLES = ("braidedbun",)
 
 
 def styles(ch):

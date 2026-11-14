@@ -1,16 +1,15 @@
-"""Hair worn instead of the Timberwolf bun: the parts of four styles that have depth.
+"""Hair worn instead of the Timberwolf bun: the parts of three styles that have depth.
 
   braid       a plaited braid from high on the back of the head, where the opening of a cap is, so it comes out
               through that opening and lies over the strap: gathered hair, a hair tie, three strands plaited around
               each other, a second hair tie and the loose end
   ponytail    a low ponytail: the hair gathered at the nape, a hair tie on the head and the hair hanging loose
   braidedbun  a bun wound from a twisted rope of hair, a spiral rising to its middle
-  donutbun    a ring of hair laid over a roll (sock bun), flat on the head
 
 Hair cannot move by itself in the game, so what hangs is shaped the way it would hang on someone standing
 upright: it leaves the head pointing down, not out, stays close to head and neck and lies on the back. Where it
 is gathered, the tie and the first centimetres belong to the head; the rest follows neck and upper spine, so it
-stays on the back when the head turns instead of swinging out with it. The buns belong to the head entirely.
+stays on the back when the head turns instead of swinging out with it. The bun belongs to the head entirely.
 
 mesh() builds the geometry (Arma model space: x, height, depth; the back of the head is +z), its UVs into the
 atlas area the bun used, and bone weights. append() adds it to a LOD of an MLOD file (the bun faces are dropped
@@ -276,25 +275,7 @@ def _braided_bun():
     return m.result()
 
 
-def _donut_bun():
-    """a ring of hair laid over a roll: the hair runs over the ring from its rim into its middle"""
-    m = _Mesh(); e1, e2, n = _bun_frame(); _bun_base(m, 0.020, 0.012)
-    RING, ROLL, HIGH, AROUND, OVER = 0.0215, 0.0135, 0.0125, 26, 12      # radius of the ring, half width and half height of the roll
-    mid = BUN_AT + n * (HIGH - 0.004); rings = []
-    for k in range(OVER + 1):
-        be = 2 * math.pi * k / OVER; idx = []
-        for j in range(AROUND):
-            al = 2 * math.pi * j / AROUND; rad = math.cos(al) * e1 + math.sin(al) * e2
-            wob = 1 + 0.05 * math.sin(3 * al + 1.0) + 0.04 * math.sin(5 * al)                  # not turned on a lathe
-            p = mid + rad * (RING + ROLL * wob * math.cos(be)) + n * (HIGH * wob * math.sin(be))
-            no = math.cos(be) / ROLL * rad + math.sin(be) / HIGH * n; no /= np.linalg.norm(no)
-            idx.append(m.point(p, no, mid + rad * RING))
-        rings.append(idx)
-        if k: m.band(rings[-2], rings[-1], R_PLAIN, 0.50 + 0.45 * (k - 1) / OVER, 0.50 + 0.45 * k / OVER)
-    return m.result()
-
-
-BUNS = {"braidedbun": _braided_bun, "donutbun": _donut_bun}
+BUNS = {"braidedbun": _braided_bun}
 
 
 def _enc(w):
