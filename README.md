@@ -24,9 +24,6 @@ named `MHF_Female_<Name>_<Style>` and `MHF_Female_<Name>_<Style>_Tactical`, for 
 
 Pick them in the Arsenal (Face) or with `player setFace "MHF_Female_Walsh_Bun"`.
 
-One more hair style is being tried out on Fraser only, with its Tactical version: a bun wound from a twisted
-rope of hair (`MHF_Female_Fraser_BraidedBun`).
-
 The four Timberwolf faces are listed under names of the same kind (`MHF_Female_Carter_Bun`,
 `MHF_Female_Carter_Bun_Tactical`, `MHF_Female_Medrano_Bun`, `MHF_Female_Medrano_Bun_Tactical`). Their own classes
 `B_female_bun_01` to `04` still work for everything that uses them, but are hidden from the face lists so every
@@ -92,7 +89,7 @@ repository). `tools/characters.py` then writes everything in `addons/heads`:
   braid is added (`tools/braid.py`): gathered hair, a hair tie, three strands plaited around each other, a second
   tie and the loose end. Hair cannot move by itself in the game, so it is shaped the way it would hang on
   someone standing upright, and only its first centimetres follow the head: the rest follows neck and upper
-  spine and stays on the back when the head turns. The same file builds the braided bun.
+  spine and stays on the back when the head turns.
 - **Shadow:** `tools/shadow.py` repairs the shadow volume of the Timberwolf head, which throws dark streaks on
   the neck: three triangles that exist twice are removed, the points below the jaw get the bone weights of the
   visible surface next to them, and points outside the visible surface are moved inside.
