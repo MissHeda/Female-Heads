@@ -80,6 +80,33 @@ def masks(base):
     return _M[base]
 
 
+# ------------------------------------------------------------------ face paint
+def paint_layer(m):
+    """The Timberwolf face paint taken off their painted face: -> (how thick it lies 0..1, its colour).
+    Their painted texture is their skin with paint over it: painted = skin * (1 - a) + paint * a. The paint is a
+    mix of two colours (olive and black), so for every texel a and the mix can be solved from the three colour
+    channels. Laid over another skin with the same a, the result is their paint exactly as it is: thick where it
+    is thick, the skin showing where it is thin, and nothing of their skin tone in it."""
+    if "paint" in m: return m["paint"]
+    tac, orig = m["tac"], m["orig"]; d = tac - orig
+    on = m["cov"] & ~m["eye"] & ~m["mouth"]
+    strong = on & (np.abs(d).max(-1) > 0.22) & (orig @ np.array([0.30, 0.59, 0.11]) > 0.3)
+    px = tac[strong]; l = px @ np.array([0.30, 0.59, 0.11])
+    black = px[l < np.percentile(l, 15)].mean(0); olive = px[l > np.percentile(l, 65)].mean(0)
+    u = black[None, None, :] - orig; v = (olive - black)[None, None, :]
+    uu = (u * u).sum(-1); uv = (u * v).sum(-1); vv = float((v * v).sum()); ud = (u * d).sum(-1); vd = (v * d).sum(-1)
+    det = np.maximum(uu * vv - uv * uv, 1e-9)
+    a = np.clip((ud * vv - vd * uv) / det, 0, 1); b = np.clip((vd * uu - ud * uv) / det, 0, None)
+    b = np.minimum(b, a * 1.15)                                        # the mix stays between black and a bit beyond olive
+    a = np.clip(np.where(uu > 1e-6, ((d - b[..., None] * v) * u).sum(-1) / np.maximum(uu, 1e-6), 0), 0, 1)   # a again with that mix
+    paint = black + (b / np.maximum(a, 1e-3))[..., None] * v
+    rest = d - (a[..., None] * u + b[..., None] * v)                   # brush marks the two colours do not explain
+    a = a * smooth(0.04, 0.10, a) * on                                 # no haze where there is no paint
+    paint = np.clip(paint + rest * smooth(0.3, 0.7, a)[..., None], 0, 1)
+    print(f"face paint: olive {olive.round(3)}, black {black.round(3)}, not explained {float(np.abs(rest[strong]).mean()):.3f}")
+    m["paint"] = (a, paint); return m["paint"]
+
+
 # ------------------------------------------------------------------ hair towards the braid
 BUN_AT, BRAID_AT = (0.665, 0.080), (0.727, 0.078)       # (height, depth): where the bun sat, where the braid starts
 
@@ -133,18 +160,24 @@ def hair_to_braid(m, hlum):
     ref = head & (m["hair"] > 0.9) & (np.abs(s) < 0.05) & (t > tr - 0.075) & (t < tr - 0.035)
     level = float(np.median(hlum[ref])); sigma = float((hlum - blurf(hlum, 3))[ref].std()) / level
     res = res * (1 + (np.clip(level / np.maximum(blurf(res, 22), 1e-3), 0.6, 2.5) - 1) * 0.8 * smooth(0.0, 0.25, k))
-    # 4. Right around the start of the braid the strands are drawn: every one runs straight to it, which moved and
-    # mirrored photo hair cannot do. Strands of all widths, each wandering a little; further out the photo takes over.
-    rr = np.hypot(s, t - tr); near = head & (rr < 0.085)
-    r_, phi = rr[near], np.arctan2(t - tr, s)[near]; rng = np.random.default_rng(8); n = np.zeros(r_.shape); tot = np.zeros(r_.shape)
-    for mm in np.unique(np.round(np.exp(rng.uniform(math.log(5), math.log(330), 90))).astype(int)):
+    # 4. Right around the start of the braid fine strands are drawn over the photo hair, which after moving and
+    # mirroring does not run to the braid everywhere. Only fine ones and only as a part of the picture: wide rays
+    # all the way round look like a star, which hair never does. They also do not run dead straight to one point:
+    # their direction wanders with the place, and how much of them shows differs from spot to spot.
+    rr = np.hypot(s, t - tr); near = head & (rr < 0.07)
+    pn = pos[near]; r_ = rr[near]
+    phi = np.arctan2(t - tr, s)[near] + 0.30 * sine_noise(pn, 45.0, 21, 6, (0.6, 1.6)) + 0.12 * sine_noise(pn, 140.0, 22, 6)
+    rng = np.random.default_rng(8); n = np.zeros(r_.shape); tot = np.zeros(r_.shape)
+    for mm in np.unique(np.round(np.exp(rng.uniform(math.log(28), math.log(330), 80))).astype(int)):
         fade = smooth(1300.0, 650.0, mm / (2 * math.pi * np.maximum(r_, 1e-3)))        # no strands thinner than the texels
-        amp = mm ** -0.35 * fade
+        amp = mm ** -0.2 * fade
         n += amp * np.sin(mm * phi + rng.uniform(0, 6.283) + rng.uniform(0.4, 1.4) * np.sin(r_ * rng.uniform(25, 70) + rng.uniform(0, 6.283)))
         tot += amp ** 2 / 2
     n /= np.sqrt(np.maximum(tot, 1e-6))
-    drawn = level * np.clip(1 + 2.2 * sigma * n, 0.3, 2.2) * (0.80 + 0.20 * smooth(0.012, 0.040, r_))
-    wd = smooth(0.078, 0.045, r_)
+    local = np.maximum(blurf(res, 6), 1e-3)[near]                                      # light and dark of the photo stay
+    drawn = local * np.clip(1 + 1.1 * sigma * n, 0.4, 1.9)
+    patchy = 0.25 + 0.30 * smooth(-0.8, 0.8, sine_noise(pn, 70.0, 23, 8, (0.6, 1.6)))
+    wd = smooth(0.062, 0.028, r_) * patchy
     res[near] = res[near] * (1 - wd) + drawn * wd
     return res
 
@@ -205,15 +238,8 @@ def face_texture(ch, tactical=False, braid=False):
     edge = m["cov"] & (y < 0.575) & (skin > 0.9) & (hair < 0.05)
     neck = out[edge].mean(0)
     if tactical:                                         # the Timberwolf face paint, laid over the new face
-        tac, orig = m["tac"], m["orig"]
-        diff = np.abs(tac - orig).max(-1)
-        # where their painted face still looks like skin there is no paint (it would bring their skin tone along)
-        bare = smooth(0.22, 0.32, tac @ np.array([0.30, 0.59, 0.11])) * smooth(0.07, 0.11, (tac[..., 0] - tac[..., 2]) / np.maximum(tac.sum(-1), 1e-3))
-        # thin paint is a mix of paint and their skin: take the skin out again and lay it over ours just as thin
-        thick = np.clip(diff / 0.30, 0, 1)
-        pure = np.clip(orig + (tac - orig) / np.maximum(thick, 0.3)[..., None], 0, 1)
-        a = blur(thick * smooth(0.035, 0.11, diff) * (1 - bare), 1.0) * (1 - m["eye"]) * (1 - m["mouth"]) * skin * (1 - hair)
-        out = lerp(out, pure * (1 - 0.12 * dark), a)
+        a, paint = paint_layer(m)
+        out = lerp(out, paint, a * (1 - hair))
     return np.clip(out, 0, 1), (neck, g)
 
 

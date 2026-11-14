@@ -44,9 +44,9 @@ repository). `tools/characters.py` then writes everything in `addons/heads`:
   (`tools/tftw_masks.py` finds skin, hair, brows, lips and iris in their texture layout). The hair of every
   character is the photographed hair of the dark-haired Timberwolf face with its soft hairline, recoloured;
   on the other face the own blonde hair is replaced by skin first. On the braid variant the hair runs to the
-  start of the braid instead of to the bun (`hair_to_braid`: the photo hair is moved up, and right around the
-  start of the braid the strands are drawn). The Tactical variant is the Timberwolf face paint laid over the
-  new skin: where their painted face still shows skin, ours shows. The iris keeps the light and dark of the photographed one and only changes its tint.
+  start of the braid instead of to the bun (`hair_to_braid`: the photo hair is moved up, with some fine drawn strands
+  right around the start of the braid). The Tactical variant is the Timberwolf face paint laid over the new
+  skin (`paint_layer` solves for the paint and how thick it lies, so it sits on any skin tone as on theirs). The iris keeps the light and dark of the photographed one and only changes its tint.
   The texture for arms and legs gets the tone of the neck and uses the same shader as the face
   (`mhfh_hl.rvmat`), so both have the same colour where they meet.
 - **Models:** the Timberwolf head with a slightly different face shape per character (jaw, chin, nose, cheeks,
