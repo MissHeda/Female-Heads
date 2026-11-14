@@ -15,7 +15,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import mlod, tftw_masks, braid as braidlib, shadow
+import mlod, tftw_masks, braid as braidlib, shadow, hairshell
 from tftw_masks import smooth, blur, blurf, N
 
 ROOT = os.path.join(HERE, ".."); DATA = os.path.join(ROOT, "addons", "heads", "data"); MODELS = os.path.join(ROOT, "addons", "heads", "models")
@@ -42,6 +42,9 @@ S_PALE, S_FAIR, S_BASE, S_TAN, S_OLIVE, S_BROWN, S_DARK = (0.665, 0.505, 0.460),
 # has the braid; the others are tried out on single characters first.
 STYLES = {"braid": "Braid", "french": "French Braid", "ponytail": "Ponytail"}
 EXTRA_STYLES = {"fraser": ("french", "ponytail")}
+# styles with the hair on the head as a layer of its own (tools/hairshell.py) instead of painted on the skull.
+# Headgear goes through that layer, so these change to another style under any headgear (addons/hair).
+SHELL_STYLES = ("french",)
 
 
 def styles(ch):
@@ -369,8 +372,14 @@ def write_model(ch, braid=False):
         # the braid goes in first (it needs a bun point as its pattern), then the bun faces come off
         P, N, faces, weights = braidlib.mesh(style)
         b = braidlib.append(b, 0, P, N, faces, weights, tex, mat, like)
+        covered = np.zeros(len(isbun), bool)
+        if style in SHELL_STYLES:                        # the hair on the head as a layer with depth
+            soft = blurf(masks(ch["base"])["hair"], 10)
+            P, N, faces, weights, covered = hairshell.shell(L, soft)
+            skin = int(np.nonzero((L.selections["personality"][0] > 0) & ~bun)[0][0])
+            b = braidlib.append(b, 0, P, N, faces, weights, tex, mat, skin)
         _, lods3 = mlod.read_bytes(bytes(b)); L3 = lods3[0]
-        keep = np.ones(L3.nfaces, bool); keep[:len(isbun)] = ~isbun
+        keep = np.ones(L3.nfaces, bool); keep[:len(isbun)] = ~isbun & ~covered
         b = mlod.rebuild(b, lods3, faces={0: (keep, np.arange(L3.npoints))})
     _, lods2 = mlod.read_bytes(bytes(b))
     b = mlod.rewrite_face_paths(b, lods2, lambda s: (tex if s.lower().endswith(".paa") else mat if s.lower().endswith(".rvmat") else s))
@@ -423,8 +432,9 @@ def write_config():
             cls = f'mhfh_{c["id"]}{v}{"_tac" if tac else ""}'
             label = ", ".join(([] if not v else [STYLES[v[1:]]]) + ([] if not tac else ["Tactical"]))
             # the same character with the other hair, for the change with the headgear (addons/hair)
-            bun = (f'            mhfh_bunFace = "mhfh_{c["id"]}{"_tac" if tac else ""}";\n' if v else
-                   f'            mhfh_braidFace = "mhfh_{c["id"]}_braid{"_tac" if tac else ""}";\n')
+            # (a style that does not go with any headgear names both and so changes under caps as well)
+            bun = (f'            mhfh_bunFace = "mhfh_{c["id"]}{"_tac" if tac else ""}";\n' if v else "") + \
+                  (f'            mhfh_braidFace = "mhfh_{c["id"]}_braid{"_tac" if tac else ""}";\n' if (not v or v[1:] in SHELL_STYLES) else "")
             # the same face with and without face paint, for the camo cream action (addons/camo)
             camo = (f'            mhfh_plainFace = "mhfh_{c["id"]}{v}";\n' if tac else f'            mhfh_camoFace = "mhfh_{c["id"]}{v}_tac";\n')
             faces += f'''        class {cls}: B_female_bun_01 {{

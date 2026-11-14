@@ -10,7 +10,8 @@
 - The braid hangs closer to head and neck and stays on the back when the head turns.
 - Headgear lists take patterns with * and ?.
 - With ACE3: "Apply camo cream" and "Remove camo cream" in the self interaction menu.
-- Two hair styles to try out on Fraser: French braid and low ponytail.
+- Two hair styles to try out on Fraser: French braid and low ponytail. The French braid has its hair as a
+  layer with depth over the skull.
 - Face paint thins out around the ears instead of stopping at them.
 - No more dark streaks on the neck: repaired shadow volume.
 - Arms and legs have the tone of the neck.

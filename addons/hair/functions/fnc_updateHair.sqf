@@ -6,6 +6,10 @@
  * one list of headgear for the braid, one for the bun, one answer for everything else. An
  * answer can also be "leave it": then the unit has the face that was picked for it.
  *
+ * A face says in its config which face is the same character with a bun (mhfh_bunFace) and
+ * with a braid (mhfh_braidFace). The bun face only names its braid, the braid face only its
+ * bun; a face with another hair style names both and so changes under any headgear.
+ *
  * Only the machine that owns the unit acts, by its own settings; the face change is sent to
  * everyone, late joiners included.
  *
@@ -30,19 +34,23 @@ private _bunFace = BUN_FACE(_face);
 private _braidFace = BRAID_FACE(_face);
 private _ownFace = _unit getVariable [OWN_VAR, ""];
 
-// Not one of the faces that come in both versions.
+// Not one of the faces that come with more than one hair style.
 if (_bunFace isEqualTo "" && {_braidFace isEqualTo ""}) exitWith {
     if (_ownFace isNotEqualTo "") then {
         _unit setVariable [OWN_VAR, nil, true];
     };
 };
 
-// A braid face names its bun face, a bun face its braid face.
-private _hasBraid = _bunFace isNotEqualTo "";
-private _otherFace = [_braidFace, _bunFace] select _hasBraid;
+// All faces of one character share her bun face.
+private _character = {
+    params ["_name"];
+
+    private _bun = BUN_FACE(_name);
+    toLowerANSI ([_bun, _name] select (_bun isEqualTo ""))
+};
 
 // Somebody gave the unit another character in the meantime: what was remembered is void.
-if (_ownFace isNotEqualTo "" && {!(toLowerANSI _ownFace in [toLowerANSI _face, toLowerANSI _otherFace])}) then {
+if (_ownFace isNotEqualTo "" && {(_ownFace call _character) isNotEqualTo (_face call _character)}) then {
     _ownFace = "";
     _unit setVariable [OWN_VAR, nil, true];
 };
@@ -53,9 +61,10 @@ private _style = if (missionNamespace getVariable [QGVAR(enabled), true]) then {
     STYLE_KEEP
 };
 
+// A face that names no braid face is the braid itself, one that names no bun face the bun.
 private _wanted = switch (_style) do {
-    case STYLE_BRAID: {[_otherFace, _face] select _hasBraid};
-    case STYLE_BUN: {[_face, _otherFace] select _hasBraid};
+    case STYLE_BRAID: {[_braidFace, _face] select (_braidFace isEqualTo "")};
+    case STYLE_BUN: {[_bunFace, _face] select (_bunFace isEqualTo "")};
     default {[_ownFace, _face] select (_ownFace isEqualTo "")};
 };
 

@@ -440,6 +440,7 @@ class CfgFaces {
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             mhfh_bunFace = "mhfh_fraser";
+            mhfh_braidFace = "mhfh_fraser_braid";
             mhfh_camoFace = "mhfh_fraser_french_tac";
         };
         class mhfh_fraser_french_tac: B_female_bun_01 {
@@ -455,6 +456,7 @@ class CfgFaces {
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             mhfh_bunFace = "mhfh_fraser_tac";
+            mhfh_braidFace = "mhfh_fraser_braid_tac";
             mhfh_plainFace = "mhfh_fraser_french";
         };
         class mhfh_fraser_ponytail: B_female_bun_01 {

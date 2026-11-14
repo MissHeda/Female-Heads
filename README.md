@@ -81,6 +81,9 @@ repository). `tools/characters.py` then writes everything in `addons/heads`:
   tie and the loose end. Hair cannot move by itself in the game, so it is shaped the way it would hang on
   someone standing upright, and only its first centimetres follow the head: the rest follows neck and upper
   spine and stays on the back when the head turns. The same file builds the French braid and the ponytail.
+  For the French braid the hair on the head is a layer of its own with depth (`tools/hairshell.py`) instead of
+  a picture on the bare skull; headgear goes through that layer, so this style changes to the braid under caps
+  and to the bun under helmets.
 - **Shadow:** `tools/shadow.py` repairs the shadow volume of the Timberwolf head, which throws dark streaks on
   the neck: three triangles that exist twice are removed, the points below the jaw get the bone weights of the
   visible surface next to them, and points outside the visible surface are moved inside.
