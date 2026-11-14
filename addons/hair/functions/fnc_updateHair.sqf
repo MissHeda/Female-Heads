@@ -6,9 +6,9 @@
  * one list of headgear for the braid, one for the bun, one answer for everything else. An
  * answer can also be "leave it": then the unit has the face that was picked for it.
  *
- * A face says in its config which face is the same character with a bun (mhfh_bunFace) and
- * with a braid (mhfh_braidFace). The bun face only names its braid, the braid face only its
- * bun; a face with another hair style names both and so changes under any headgear.
+ * A face says in its config which face is the same character with a bun (mhfh_bunFace) or
+ * with a braid (mhfh_braidFace). A bun names its braid, hair that hangs names the bun: a
+ * face that names no bun face is a bun itself and stays where a bun is asked for.
  *
  * Only the machine that owns the unit acts, by its own settings; the face change is sent to
  * everyone, late joiners included.
@@ -41,9 +41,12 @@ if (_bunFace isEqualTo "" && {_braidFace isEqualTo ""}) exitWith {
     };
 };
 
-// All faces of one character share her bun face.
+// All faces of one character list the same hair styles; without a list they share her bun.
 private _character = {
     params ["_name"];
+
+    private _styles = getArray (CFG_FACE(_name) >> STYLES_KEY);
+    if (count _styles > 1) exitWith {toLowerANSI (_styles select 1)};
 
     private _bun = BUN_FACE(_name);
     toLowerANSI ([_bun, _name] select (_bun isEqualTo ""))
@@ -61,10 +64,14 @@ private _style = if (missionNamespace getVariable [QGVAR(enabled), true]) then {
     STYLE_KEEP
 };
 
-// A face that names no braid face is the braid itself, one that names no bun face the bun.
+// A face that names no braid face is the braid itself, one that names no bun face a bun.
+// Where a bun is asked for and the picked face is a bun of another kind, that one is worn.
 private _wanted = switch (_style) do {
     case STYLE_BRAID: {[_braidFace, _face] select (_braidFace isEqualTo "")};
-    case STYLE_BUN: {[_bunFace, _face] select (_bunFace isEqualTo "")};
+    case STYLE_BUN: {
+        if (_bunFace isEqualTo "") exitWith {_face};
+        [_bunFace, _ownFace] select (_ownFace isNotEqualTo "" && {BUN_FACE(_ownFace) isEqualTo ""})
+    };
     default {[_ownFace, _face] select (_ownFace isEqualTo "")};
 };
 

@@ -9,8 +9,8 @@ That mod has to be loaded: normal and ambient maps and the base classes come fro
 ## Faces
 
 Every character comes with a bun or a braid, each also as a Tactical version with face paint. The classes are
-named `MHFH_<Name>_<Style>` and `MHFH_<Name>_<Style>_Tactical`, for example `MHFH_Walsh_Bun`,
-`MHFH_Walsh_Braid_Tactical`. In the arsenal every style is followed by its Tactical version.
+named `MHF_Female_<Name>_<Style>` and `MHF_Female_<Name>_<Style>_Tactical`, for example `MHF_Female_Walsh_Bun`,
+`MHF_Female_Walsh_Braid_Tactical`. In the arsenal every style is followed by its Tactical version.
 
 | Name | Look |
 |---|---|
@@ -22,10 +22,16 @@ named `MHFH_<Name>_<Style>` and `MHFH_<Name>_<Style>_Tactical`, for example `MHF
 | Fraser | ginger hair, fair skin, freckles, green eyes |
 | Novak | light brown hair, hazel eyes |
 
-Pick them in the Arsenal (Face) or with `player setFace "MHFH_Walsh_Bun"` / `"MHFH_Walsh_Bun_Tactical"`.
+Pick them in the Arsenal (Face) or with `player setFace "MHF_Female_Walsh_Bun"`.
 
-Two more hair styles are being tried out on Fraser only: a French braid (`MHFH_Fraser_FrenchBraid`) and a low
-ponytail (`MHFH_Fraser_Ponytail`), each with its Tactical version.
+Three more hair styles are being tried out on Fraser only, each with its Tactical version: a low ponytail
+(`MHF_Female_Fraser_Ponytail`), a bun wound from a twisted rope of hair (`MHF_Female_Fraser_BraidedBun`) and a
+donut bun (`MHF_Female_Fraser_DonutBun`).
+
+The four Timberwolf faces are listed under names of the same kind (`MHF_Female_Carter_Bun`,
+`MHF_Female_Carter_Bun_Tactical`, `MHF_Female_Medrano_Bun`, `MHF_Female_Medrano_Bun_Tactical`). Their own classes
+`B_female_bun_01` to `04` still work for everything that uses them, but are hidden from the face lists so every
+face shows once.
 
 ## Braid and headgear
 
@@ -53,7 +59,7 @@ hand, it stays a bun without a helmet too.
 
 **Other mods:** headgear can ask for the braid itself with `mhfh_keepBraid = 1;` in its `CfgWeapons` class.
 Faces that come with a bun and with a braid take part when they name each other in `CfgFaces`:
-`mhfh_bunFace = "<bun face>";` in the braid face, `mhfh_braidFace = "<braid face>";` in the bun face.
+`mhfh_bunFace = "<bun face>";` in a face with hanging hair, `mhfh_braidFace = "<braid face>";` in a bun face.
 For the hair action a face lists all styles of its character as pairs of style and face:
 `mhfh_hairStyles[] = {"bun", "<face>", "braid", "<face>"};`
 
@@ -87,10 +93,7 @@ repository). `tools/characters.py` then writes everything in `addons/heads`:
   braid is added (`tools/braid.py`): gathered hair, a hair tie, three strands plaited around each other, a second
   tie and the loose end. Hair cannot move by itself in the game, so it is shaped the way it would hang on
   someone standing upright, and only its first centimetres follow the head: the rest follows neck and upper
-  spine and stays on the back when the head turns. The same file builds the French braid and the ponytail.
-  For the French braid the hair on the head is a layer of its own with depth (`tools/hairshell.py`) instead of
-  a picture on the bare skull; headgear goes through that layer, so this style changes to the braid under caps
-  and to the bun under helmets.
+  spine and stays on the back when the head turns. The same file builds the ponytail and the two other buns.
 - **Shadow:** `tools/shadow.py` repairs the shadow volume of the Timberwolf head, which throws dark streaks on
   the neck: three triangles that exist twice are removed, the points below the jaw get the bone weights of the
   visible surface next to them, and points outside the visible surface are moved inside.

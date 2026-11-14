@@ -46,11 +46,14 @@
         <Key ID="STR_mhfh_hair_STYLE_Braid">
             <English>Braid</English>
         </Key>
+        <Key ID="STR_mhfh_hair_STYLE_BraidedBun">
+            <English>Braided bun</English>
+        </Key>
         <Key ID="STR_mhfh_hair_STYLE_Bun">
             <English>Bun</English>
         </Key>
-        <Key ID="STR_mhfh_hair_STYLE_French">
-            <English>French braid</English>
+        <Key ID="STR_mhfh_hair_STYLE_DonutBun">
+            <English>Donut bun</English>
         </Key>
         <Key ID="STR_mhfh_hair_STYLE_Keep">
             <English>As picked</English>
