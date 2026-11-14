@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project name="mhfh">
     <Package name="hair">
+        <Key ID="STR_mhfh_hair_Action_Face">
+            <English>Face</English>
+        </Key>
         <Key ID="STR_mhfh_hair_Action_Hair">
             <English>Hair</English>
         </Key>

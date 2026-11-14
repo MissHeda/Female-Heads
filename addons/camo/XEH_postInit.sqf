@@ -2,7 +2,7 @@
 
 if (!hasInterface) exitWith {};
 
-// The actions live in ACE's self-interaction menu, under Equipment.
+// The actions live in ACE's self interaction menu, under Equipment > Face (made by addons/hair).
 if !(isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) exitWith {};
 
 private _apply = [
@@ -33,5 +33,5 @@ private _remove = [
     }
 ] call ace_interact_menu_fnc_createAction;
 
-["CAManBase", 1, ["ACE_SelfActions", "ACE_Equipment"], _apply, true] call ace_interact_menu_fnc_addActionToClass;
-["CAManBase", 1, ["ACE_SelfActions", "ACE_Equipment"], _remove, true] call ace_interact_menu_fnc_addActionToClass;
+["CAManBase", 1, ["ACE_SelfActions", "ACE_Equipment", "mhfh_hair_face"], _apply, true] call ace_interact_menu_fnc_addActionToClass;
+["CAManBase", 1, ["ACE_SelfActions", "ACE_Equipment", "mhfh_hair_face"], _remove, true] call ace_interact_menu_fnc_addActionToClass;

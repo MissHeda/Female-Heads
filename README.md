@@ -49,7 +49,7 @@ like any CBA setting.
 An entry with `*` or `?` in it is a pattern for the class name itself (`*` any text, `?` one character, case
 does not matter): `H_Cap_*`, `*Beret*`, `H_Helmet?_*`.
 
-**By hand:** with ACE3 loaded the self interaction menu has "Hair" under Equipment, with every other hair
+**By hand:** with ACE3 loaded the self interaction menu has "Face" > "Hair" under Equipment, with every other hair
 style the character comes with. What is picked there counts as her own hair from then on: put up in a bun by
 hand, it stays a bun without a helmet too.
 
@@ -61,7 +61,7 @@ For the hair action a face lists all styles of its character as pairs of style a
 
 ## Camo cream
 
-With ACE3 loaded the self interaction menu has "Apply camo cream" and "Remove camo cream" under Equipment
+With ACE3 loaded the self interaction menu has "Apply camo cream" and "Remove camo cream" under Equipment > Face
 (`addons/camo`): they switch a character between her face and its Tactical version, after a few seconds shown
 as a progress bar. Settings (server): the time it takes and a switch for the actions. Without ACE3 the faces are
 simply picked as usual.
