@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project name="mhfh">
+    <Package name="hair">
+        <Key ID="STR_mhfh_hair_SETTING_BraidHeadgear">
+            <English>Headgear worn with the braid</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_SETTING_BraidHeadgear_DESC">
+            <English>Class names of the headgear a braid\nfits under, separated by commas.\n\nEverything that inherits from one of\nthem counts as well. With any other\nheadgear the character wears her bun.\n\nDefault: the baseball caps, where the\nbraid comes out through the opening\nat the back.</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_SETTING_Category">
+            <English>MH Female Heads</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_SETTING_Enabled">
+            <English>Bun under helmets</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_SETTING_Enabled_DESC">
+            <English>A character with a braid switches to\nher bun while she wears a helmet and\ngets the braid back when it comes off.\n\nOff: a braid always stays a braid and\ngoes through the helmet.</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_SETTING_SubCategory_Braid">
+            <English>Braid</English>
+        </Key>
+    </Package>
+</Project>

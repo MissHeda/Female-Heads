@@ -11,7 +11,7 @@ REPO = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 O = os.path.join(REPO, "tools", "out"); C = os.path.join(REPO, "tools", "check")
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 SUFFIXES = args or ["", "_braid"]
-IDS = ["kovacs", "reyes", "okoye", "walsh", "lindqvist", "fraser", "novak", "haddad"]
+IDS = ["kovacs", "reyes", "okoye", "walsh", "lindqvist", "fraser", "novak"]
 RES = 512; VIEWS = ((0, 0), (40, 5), (95, 0), (165, 8))
 
 bpy.ops.wm.read_factory_settings(use_empty=True)

@@ -3,10 +3,10 @@
 Every character is that head with a slightly different face shape and a face texture derived from one of the two
 Timberwolf faces: other skin tone, hair, brow and eye colour, optional freckles, plus a "Tactical" variant with
 their face paint. Reads the reference data written by tools/ref_tftw.py and writes
-  addons/heads/data/mhfh_<id>[_tac]_co.paa, mhfh_<id>_hl_co.paa   textures (face, hands)
-  addons/heads/models/mhfh_<id>.p3d                                the reshaped model (all LODs)
-  addons/heads/config.cpp, model.cfg                               faces and heads
-The mod needs the Timberwolf mod loaded: normal/ambient maps, hand material and base classes come from it.
+  addons/heads/data/mhfh_<id>[_braid][_tac]_co.paa, mhfh_<id>_hl_co.paa   textures (face, arms and legs)
+  addons/heads/models/mhfh_<id>[_braid].p3d                                the reshaped model (all LODs)
+  addons/heads/config.cpp, model.cfg                                       faces and heads
+The mod needs the Timberwolf mod loaded: normal/ambient maps and base classes come from it.
 usage (repo root): python -I tools/characters.py [--preview]
 """
 import os, subprocess, sys
@@ -15,7 +15,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import mlod, tftw_masks, braid as braidlib
+import mlod, tftw_masks, braid as braidlib, shadow
 from tftw_masks import smooth, blur, N
 
 ROOT = os.path.join(HERE, ".."); DATA = os.path.join(ROOT, "addons", "heads", "data"); MODELS = os.path.join(ROOT, "addons", "heads", "models")
@@ -28,7 +28,11 @@ TFTW = "\\A3_female_heads\\female_head_ICEMAN\\female_01\\"
 # hair / eye colours (sRGB 0..1)
 BLACK, DARKBROWN, CHESTNUT, AUBURN = (0.040, 0.036, 0.038), (0.105, 0.062, 0.042), (0.20, 0.105, 0.060), (0.27, 0.085, 0.045)
 LIGHTBROWN, GINGER, BLONDE, PLATINUM = (0.34, 0.225, 0.14), (0.44, 0.215, 0.105), (0.62, 0.50, 0.33), (0.76, 0.67, 0.50)
-E_BLUE, E_GREY, E_GREEN, E_HAZEL, E_BROWN, E_DARK = (0.30, 0.45, 0.62), (0.45, 0.50, 0.54), (0.33, 0.47, 0.30), (0.45, 0.36, 0.18), (0.30, 0.17, 0.08), (0.16, 0.09, 0.05)
+# eye colours: (tint, brightness) of the iris against the grey of the photographed one, which keeps its light and
+# dark. The game shows colours far more saturated than the texture has them: the clearly blue eyes of the
+# Timberwolf face are (0.95, 1.01, 1.08) on this scale, her brown ones (1.15, 0.94, 0.89).
+E_BLUE, E_GREY, E_GREEN = ((0.93, 1.00, 1.09), 1.00), ((0.97, 1.00, 1.03), 1.00), ((0.96, 1.04, 0.93), 0.92)
+E_HAZEL, E_BROWN, E_DARK = ((1.09, 1.00, 0.86), 0.88), ((1.15, 0.95, 0.87), 0.78), ((1.11, 0.97, 0.89), 0.52)
 # skin tones: mean cheek colour the face is brought to
 S_PALE, S_FAIR, S_BASE, S_TAN, S_OLIVE, S_BROWN, S_DARK = (0.665, 0.505, 0.460), (0.625, 0.455, 0.405), (0.585, 0.420, 0.370), \
     (0.515, 0.350, 0.280), (0.490, 0.345, 0.265), (0.365, 0.235, 0.180), (0.300, 0.190, 0.142)
@@ -49,8 +53,6 @@ CHARS = [
          shape=dict(jaw=0.8, chin=-0.6, chin_fwd=0.0, nose_w=0.02, nose_len=-0.2, nose_up=0.6, cheek=-0.4, lips=0.8, brow=-0.2)),
     dict(id="novak", name="Novak", base=3, hair=LIGHTBROWN, skin=S_BASE, eyes=E_HAZEL, freckles=0.0,
          shape=dict(jaw=1.6, chin=1.4, chin_fwd=0.6, nose_w=0.04, nose_len=0.4, nose_up=-0.4, cheek=0.6, lips=-0.2, brow=0.5)),
-    dict(id="haddad", name="Haddad", base=3, hair=BLACK, skin=S_OLIVE, eyes=E_BROWN, freckles=0.0,
-         shape=dict(jaw=-0.4, chin=0.2, chin_fwd=0.4, nose_w=0.0, nose_len=1.2, nose_up=-0.6, cheek=0.8, lips=1.0, brow=0.8)),
 ]
 
 
@@ -102,35 +104,57 @@ def face_texture(ch, tactical=False, braid=False):
     light = float(np.clip((ht.max() - 0.25) / 0.45, 0, 1))                # light hair shows less contrast between strands
     # dark hair: only its highlights reach the target colour; light hair: its average does
     hl = hlum[hair > 0.9]; hmean = float(np.percentile(hl, 85 - 40 * light))
-    def recolour(l):
-        rel = np.clip(l / max(hmean, 1e-3), 0.15, 1.6 - 0.45 * light)
-        return np.minimum(ht * (rel ** (0.80 - 0.30 * light))[..., None], 0.94)
+    # (the photo is of dark hair: its darkest strands stay dark in any colour, so light hair keeps less of them)
+    # and those it keeps fade in softly and turn warmer instead of grey)
+    def recolour(l, floor=0.15 + 0.42 * light):
+        rel = l / max(hmean, 1e-3); top = 1.6 - 0.45 * light
+        soft = np.where(rel < 1, floor + (1 - floor) * np.clip(rel, 0, 1) ** 0.8, np.minimum(rel, top))
+        rel = np.clip(rel, floor, top) * (1 - light) + soft * light
+        warm = 1 + light * np.array([-0.10, 0.0, 0.20])
+        return np.minimum(ht * rel[..., None] ** ((0.80 - 0.30 * light) * warm), 0.94)
+    if braid:                                            # the hair the bun covered was photographed in its shadow
+        under = smooth(0.050, 0.070, z) * smooth(0.055, 0.035, ax) * smooth(0.600, 0.630, y) * smooth(0.735, 0.710, y) * (1 - m["bun"])
+        hlum = hlum * (1 - under) + np.maximum(hlum, hmean * (0.55 + 0.35 * sine_noise(pos, 900.0, 4, 8).clip(-1, 1) * 0.5 + 0.2)) * under
     out = lerp(out, np.clip(recolour(hlum), 0, 1), hair)
-    if braid:                                            # the braid photo goes where the bun's texture was
-        for (x0, x1, y0, y1), row in zip(braidlib.ROWS, braidlib.braid_strip()):
-            row = row / max(float(np.percentile(row, 85)), 1e-3) * hmean
-            out[y0:y1, x0:x1] = np.clip(recolour(row), 0, 1)
-            out[y0 - 3:y0, x0:x1] = out[y0, x0:x1]; out[y1:y1 + 3, x0:x1] = out[y1 - 1, x0:x1]
+    if braid:                                            # the braid's hair goes where the bun's texture was
+        strips, tie = braidlib.textures()
+        for (x0, x1, y0, y1), row in strips:
+            # on dark hair only the highlights of the head reach the hair colour: the braid is as dark as the rest
+            c = np.clip(recolour(row * hmean * (0.62 + 0.38 * light), floor=0.2), 0, 1)
+            out[y0:y1, x0:x1] = c
+            out[y0 - 3:y0, x0:x1] = c[-3:]; out[y1:y1 + 3, x0:x1] = c[:3]          # the strip closes around the strand
+            out[y0 - 3:y1 + 3, x0 - 3:x0] = out[y0 - 3:y1 + 3, x0:x0 + 1]; out[y0 - 3:y1 + 3, x1:x1 + 3] = out[y0 - 3:y1 + 3, x1 - 1:x1]
+        x0, x1, y0, y1 = tie
+        out[y0 - 3:y1 + 3, x0 - 3:x1 + 3] = np.array([0.050, 0.046, 0.050]) + np.random.default_rng(2).normal(0, 0.006, (y1 - y0 + 6, x1 - x0 + 6, 1))
     # --- brows follow the hair (never lighter than a mid brown), lashes stay dark
     bc = np.minimum(ht * 0.75, np.array([0.30, 0.20, 0.13])) + 0.015
     out = lerp(out, np.broadcast_to(bc, out.shape) * (0.75 + 0.5 * (lum / np.maximum(blur(lum, 9), 1e-3))[..., None]).clip(0, 1.5), np.clip(m["brows"] * 0.9, 0, 1))
     # --- iris
-    il = lum[m["iris"] > 0.5]; imean = float(il.mean()) if len(il) else 0.3
-    ic = np.array(ch["eyes"])[None, None, :] * np.clip(lum / imean, 0.2, 2.5)[..., None]
-    out = lerp(out, np.clip(ic, 0, 1), m["iris"] * 0.88)
+    # --- iris: the photographed iris keeps its brightness and structure, only its tint changes
+    tint, bright = ch["eyes"]
+    ic = lum[..., None] * np.array(tint)[None, None, :] * bright
+    out = lerp(out, np.clip(ic, 0, 1), m["iris"] * 0.92)
+    # the skin at the lower edge, where the neck meets the body: the arms get this tone
+    edge = m["cov"] & (y < 0.575) & (skin > 0.9) & (hair < 0.05)
+    neck = out[edge].mean(0)
     if tactical:                                         # their face paint, laid over the new face
-        diff = np.abs(m["tac"] - m["orig"]).max(-1)
-        a = blur(smooth(0.035, 0.11, diff), 1.0) * (1 - m["eye"]) * (1 - m["mouth"])
-        paint = m["tac"] * (0.92 - 0.25 * dark)
-        out = lerp(out, paint, a)
-    return np.clip(out, 0, 1), (mean, target, g)
+        tac, orig = m["tac"], m["orig"]
+        diff = np.abs(tac - orig).max(-1)
+        # where their painted face still looks like skin there is no paint (it would bring their skin tone along)
+        bare = smooth(0.22, 0.32, tac @ np.array([0.30, 0.59, 0.11])) * smooth(0.07, 0.11, (tac[..., 0] - tac[..., 2]) / np.maximum(tac.sum(-1), 1e-3))
+        # thin paint is a mix of paint and their skin: take the skin out again and lay it over ours just as thin
+        thick = np.clip(diff / 0.30, 0, 1)
+        pure = np.clip(orig + (tac - orig) / np.maximum(thick, 0.3)[..., None], 0, 1)
+        a = blur(thick * smooth(0.035, 0.11, diff) * (1 - bare), 1.0) * (1 - m["eye"]) * (1 - m["mouth"]) * skin * (1 - hair)
+        out = lerp(out, pure * (1 - 0.12 * dark), a)
+    return np.clip(out, 0, 1), (neck, g)
 
 
 def hands_texture(ch, skinfit):
-    mean, target, g = skinfit
+    neck, g = skinfit
     h = np.asarray(Image.open(os.path.join(REF, "tex", f"hands_0{ch['base']}.png")).convert("RGB"), dtype=np.float64) / 255
-    hm = h.reshape(-1, 3); hm = hm[hm.sum(1) > 0.6].mean(0)              # hand skin mean (ignore dark background)
-    return np.clip(target * np.clip(h / hm, 0, 3) ** g, 0, 1)
+    hm = h.reshape(-1, 3); hm = hm[hm.sum(1) > 0.6].mean(0)              # skin mean (ignore dark background)
+    return np.clip(neck * np.clip(h / hm, 0, 3) ** g, 0, 1)
 
 
 def save_paa(arr, name):
@@ -167,8 +191,12 @@ def morph(P, s):
     return P + d
 
 
+_SRC = []
+
+
 def write_model(ch, braid=False):
-    b, lods = mlod.read(SRC_P3D)
+    if not _SRC: _SRC.append(bytes(shadow.fix(open(SRC_P3D, "rb").read(), verbose=True)))
+    b, lods = mlod.read_bytes(_SRC[0])
     newp, newn = {}, {}
     for L in lods:
         if L.npoints == 0 or L.res > 9e14: continue          # empty and memory LODs stay
@@ -220,6 +248,11 @@ VertexShaderID = "Super";
                     (3, "#(argb,8,8,3)color(0,0,0,0,MC)", ""), (4, "A3_female_heads\\Models\\xxx_as.paa", ""),
                     (5, "#(argb,8,8,3)color(0,0,0.5,1,SMDI)", ""), (6, "#(ai,64,64,1)fresnel(0.5,0.2)", ""),
                     (7, "a3\\data_f\\env_co.paa", '    useWorldEnvMap = "true";\n')))
+# arms and legs: the same shader and settings as the face, so they have the same tone where they meet
+# (the game's own material for them is the "Skin" shader, which turns the same texture clearly more orange)
+RVMAT_HL = RVMAT.replace("m_ti_ca.paa", "hl_ti_ca.paa").replace("A3_female_heads\\Models\\xxx_nohq.paa", "a3\\characters_f\\heads\\data\\hl_muscular_nohq.paa") \
+    .replace("A3_female_heads\\Models\\xxx_as.paa", "a3\\characters_f\\heads\\data\\hl_muscular_as.paa")
+assert RVMAT_HL.count("hl_") == 3
 
 
 def write_config():
@@ -233,6 +266,8 @@ def write_config():
         for v, tac in (("", False), ("", True), ("_braid", False), ("_braid", True)):
             cls = f'mhfh_{c["id"]}{v}{"_tac" if tac else ""}'
             label = ", ".join(([] if not v else ["Braid"]) + ([] if not tac else ["Tactical"]))
+            # the face worn instead while the headgear leaves no room for the braid (addons/hair)
+            bun = f'            mhfh_bunFace = "mhfh_{c["id"]}{"_tac" if tac else ""}";\n' if v else ""
             faces += f'''        class {cls}: B_female_bun_01 {{
             author = "Miss Heda";
             displayName = "{c["name"]}{" (" + label + ")" if label else ""}";
@@ -242,8 +277,10 @@ def write_config():
             materialWounded1 = "{D}mhfh_face.rvmat";
             materialWounded2 = "{D}mhfh_face.rvmat";
             textureHL = "{D}mhfh_{c["id"]}_hl_co.paa";
+            materialHL = "{D}mhfh_hl.rvmat";
             textureHL2 = "{D}mhfh_{c["id"]}_hl_co.paa";
-        }};
+            materialHL2 = "{D}mhfh_hl.rvmat";
+{bun}        }};
 '''
     cfg = f'''// Generated by tools/characters.py
 class CfgPatches {{
@@ -271,6 +308,7 @@ class CfgFaces {{
 '''
     open(os.path.join(ROOT, "addons", "heads", "config.cpp"), "w", newline="\n").write(cfg)
     open(os.path.join(DATA, "mhfh_face.rvmat"), "w", newline="\n").write(RVMAT)
+    open(os.path.join(DATA, "mhfh_hl.rvmat"), "w", newline="\n").write(RVMAT_HL)
     # model.cfg: the skeleton comes from the BI sample (kept as it is in the file), the model classes are ours.
     # Without a matching class a model is binarized without skeleton and the face does not animate.
     mc = os.path.join(ROOT, "addons", "heads", "model.cfg"); s = open(mc, encoding="utf8").read()

@@ -1,29 +1,39 @@
-"""The braid variant: a short braid hanging from the back of the head instead of the bun.
+"""The braid variant: a plaited braid instead of the bun.
+
+It starts high on the back of the head, where the opening of a cap is, so it comes out through that opening and
+hangs over the strap. From top to bottom: gathered hair coming out of the head, a hair tie, three strands
+plaited around each other, a second hair tie and the loose end.
 
 braid_mesh() builds the geometry (Arma model space: x, height, depth; the back of the head is +z), its UVs into
 the atlas area the bun used, and bone weights. append() adds it to a LOD of an MLOD file (the bun faces are
-dropped before with mlod.rebuild). braid_strip() gives the photographed braid for that atlas area.
+dropped afterwards with mlod.rebuild). textures() gives the luminance of the hair for that atlas area.
 """
 import math, os, struct
 import numpy as np
-from PIL import Image
 import mlod
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-# centre line (height, depth): starts inside the hair at the back of the head, hangs down clear of the neck and
-# ends above the collar, where the uniform's back comes out
-PATH = [(0.684, 0.056), (0.675, 0.072), (0.658, 0.079), (0.630, 0.078), (0.600, 0.083), (0.572, 0.094), (0.550, 0.103)]
-A, B = 0.0185, 0.0115            # half width, half thickness
-SIDES, STEP, PERIOD = 10, 0.0055, 0.029
-# two rows in the old bun area of the 1024 atlas (pixels: x0, x1, y0, y1): first and second half of the braid
-ROWS = ((778, 1004, 792, 872), (778, 1004, 884, 964))
+# centre line (height, depth): from inside the head through the cap opening (height 0.705..0.745), clear of the
+# strap below it (height 0.69..0.70, depth up to 0.084), then hanging down behind the neck onto the back
+PATH = [(0.729, 0.058), (0.728, 0.074), (0.725, 0.088), (0.714, 0.100), (0.696, 0.107), (0.670, 0.109), (0.640, 0.107),
+        (0.610, 0.105), (0.582, 0.106), (0.560, 0.110), (0.540, 0.116), (0.524, 0.121)]
+ROOT = 0.036                     # arc length of the gathered hair before the first tie
+TAIL = 0.046                     # length of the loose end after the second tie
+TIE = 0.006                      # length of a hair tie
+W0, W1 = 0.0175, 0.0125          # half width of the braid at its top and at its lower tie
+PERIOD = 0.050                   # length over which one strand goes left, right and back, at the top
+STEP = 0.0042                    # distance between two rings of a strand
+SIDES = 6
+# atlas areas in the old bun area of the 1024 atlas (pixels: x0, x1, y0, y1). A corner of the chest reaches into
+# the top left of that area (up to x 811 at y 778, x 758 at y 834), so nothing of the braid lies there.
+R_STRAND, R_PLAIN, R_TIE = (778, 1004, 842, 926), (778, 1004, 938, 992), (860, 1000, 796, 824)
+MARGIN = 0.10                    # the strand strip holds this much more than one period
 
 
 def _smooth(e0, e1, x):
     t = min(1.0, max(0.0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t)
 
 
-def _spline(pts, n=400):
+def _spline(pts, n=600):
     P = np.array([pts[0]] + list(pts) + [pts[-1]], dtype=np.float64); out = []
     for i in range(1, len(P) - 2):
         for t in np.linspace(0, 1, n // (len(P) - 3), endpoint=False):
@@ -32,67 +42,130 @@ def _spline(pts, n=400):
     out.append(P[-2]); return np.array(out)
 
 
+class _Line:
+    """the centre line by arc length: position, direction and the direction away from the body"""
+    def __init__(s):
+        C = _spline(PATH); s.arc = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(C, axis=0), axis=1))]); s.C = C
+        s.total = float(s.arc[-1])
+
+    def at(s, l):
+        l = min(max(l, 0.0), s.total); f = l / s.total
+        y = np.interp(l, s.arc, s.C[:, 0]); z = np.interp(l, s.arc, s.C[:, 1])
+        la, lb = max(l - 0.002, 0), min(l + 0.002, s.total)
+        t = np.array([np.interp(lb, s.arc, s.C[:, 0]) - np.interp(la, s.arc, s.C[:, 0]), np.interp(lb, s.arc, s.C[:, 1]) - np.interp(la, s.arc, s.C[:, 1])])
+        t /= np.linalg.norm(t)
+        x = 0.0035 * math.sin(2.6 * f + 0.4) * _smooth(0.15, 0.6, f) - 0.0025 * _smooth(0.75, 1.0, f)   # it never hangs dead straight
+        return np.array([x, y, z]), np.array([0.0, t[0], t[1]]), np.array([0.0, t[1], -t[0]])
+
+
+def _weights(y):
+    head = _smooth(0.640, 0.675, y); spine = _smooth(0.600, 0.565, y)
+    w = {"Head": head, "Spine3": spine, "Neck": max(0.0, 1 - head - spine)}
+    return {k: v for k, v in w.items() if v > 0.004}
+
+
+class _Mesh:
+    def __init__(s): s.P = []; s.N = []; s.W = []; s.F = []; s.cen = []
+
+    def ring(s, c, eu, ev, ru, rv, sides):
+        idx = []
+        for j in range(sides):
+            th = 2 * math.pi * j / sides
+            p = c + ru * math.cos(th) * eu + rv * math.sin(th) * ev
+            n = math.cos(th) / ru * eu + math.sin(th) / rv * ev; n /= np.linalg.norm(n)
+            idx.append(len(s.P)); s.P.append(p); s.N.append(-n); s.W.append(_weights(float(p[1]))); s.cen.append(c)
+        return idx
+
+    def point(s, p, n, c):
+        s.P.append(np.asarray(p, float)); s.N.append(-np.asarray(n, float)); s.W.append(_weights(float(p[1]))); s.cen.append(np.asarray(c, float))
+        return len(s.P) - 1
+
+    def band(s, r0, r1, rect, u0, u1, span=1.0):
+        """quads between two rings; u0, u1: position of the rings along the strip (0..span)"""
+        n = len(r0); x0, x1, y0, y1 = rect
+        uv = lambda u, j: ((x0 + u / span * (x1 - x0)) / 1024.0, (y0 + j / n * (y1 - y0)) / 1024.0)
+        for j in range(n):
+            j2 = (j + 1) % n
+            a = (r0[j], r0[j], *uv(u0, j)); b = (r0[j2], r0[j2], *uv(u0, j + 1)); c = (r1[j2], r1[j2], *uv(u1, j + 1)); d = (r1[j], r1[j], *uv(u1, j))
+            s.F.append([a, b, c]); s.F.append([a, c, d])
+
+    def fan(s, r, tip, rect, u0, u1, span=1.0):
+        n = len(r); x0, x1, y0, y1 = rect
+        uv = lambda u, j: ((x0 + u / span * (x1 - x0)) / 1024.0, (y0 + j / n * (y1 - y0)) / 1024.0)
+        for j in range(n):
+            j2 = (j + 1) % n
+            s.F.append([(r[j], r[j], *uv(u0, j)), (r[j2], r[j2], *uv(u0, j + 1)), (tip, tip, *uv(u1, j + 0.5))])
+
+    def result(s):
+        P = np.array(s.P); N = np.array(s.N); cen = np.array(s.cen); out = []
+        for f in s.F:                                                    # MLOD: cross(p1-p0, p2-p0) points inwards
+            i0, i1, i2 = f[0][0], f[1][0], f[2][0]
+            away = (P[i0] + P[i1] + P[i2]) / 3 - (cen[i0] + cen[i1] + cen[i2]) / 3
+            out.append(f if np.dot(np.cross(P[i1] - P[i0], P[i2] - P[i0]), away) < 0 else [f[0], f[2], f[1]])
+        return P, N, out, s.W
+
+
 def braid_mesh():
     """-> points (n,3), inward normals (n,3), faces [[(point, normal, u, v) x3]], weights [{bone: weight}]"""
-    C = _spline(PATH); seg = np.linalg.norm(np.diff(C, axis=0), axis=1); arc = np.concatenate([[0], np.cumsum(seg)])
-    total = arc[-1]; K = int(round(total / STEP)) | 1                 # odd: one ring sits exactly in the middle
-    rings = []; pts = []; nrm = []; wts = []
-    for k in range(K):
-        l = total * k / (K - 1); s = l / total
-        y = np.interp(l, arc, C[:, 0]); z = np.interp(l, arc, C[:, 1])
-        y2 = np.interp(min(l + 0.002, total), arc, C[:, 0]); z2 = np.interp(min(l + 0.002, total), arc, C[:, 1])
-        y1 = np.interp(max(l - 0.002, 0), arc, C[:, 0]); z1 = np.interp(max(l - 0.002, 0), arc, C[:, 1])
-        t = np.array([y2 - y1, z2 - z1]); t /= np.linalg.norm(t)
-        nout = np.array([0.0, t[1], -t[0]])                           # away from the body
-        sc = (0.80 + 0.20 * _smooth(0.0, 0.10, s)) * (1.0 - 0.52 * _smooth(0.72, 1.0, s))
-        a = A * sc * (1 + 0.07 * math.cos(4 * math.pi * l / PERIOD)); b = B * sc
-        cx = 0.0012 * math.sin(2 * math.pi * l / PERIOD) * sc
-        ring = []
-        for j in range(SIDES):
-            th = 2 * math.pi * j / SIDES
-            p = np.array([cx + a * math.cos(th), y, z]) + b * math.sin(th) * nout
-            n = np.array([math.cos(th) / a, 0, 0]) + math.sin(th) / b * nout; n /= np.linalg.norm(n)
-            ring.append(len(pts)); pts.append(p); nrm.append(-n)
-            head = _smooth(0.618, 0.650, y); spine = _smooth(0.590, 0.560, y)
-            w = {"Head": head, "Spine3": spine, "Neck": max(0.0, 1 - head - spine)}
-            wts.append({k_: v for k_, v in w.items() if v > 0.004})
-        rings.append((ring, s))
-    tip = len(pts); y, z = C[-1]; pts.append(np.array([0.0, y - 0.004, z + 0.001])); nrm.append(np.array([0.0, 1.0, 0.0])); wts.append(dict(wts[-1]))
+    line = _Line(); m = _Mesh(); X = np.array([1.0, 0.0, 0.0])
+    la, lb = ROOT + TIE * 0.5, line.total - TAIL - TIE * 0.5             # the plaited part
+    width = lambda l: W0 + (W1 - W0) * _smooth(la, lb, l) ** 0.8
 
-    def uv(s, j):
-        row = ROWS[0] if s <= 0.5 + 1e-9 else ROWS[1]
-        f = (s / 0.5) if s <= 0.5 + 1e-9 else ((s - 0.5) / 0.5)
-        return row, f, 0.5 - 0.5 * math.cos(2 * math.pi * j / SIDES)
+    def tube(l0, l1, n, ru, rv, rect, sides=8, u=(0.0, 1.0)):
+        rings = []
+        for k in range(n):
+            f = k / (n - 1); l = l0 + (l1 - l0) * f
+            c, t, no = line.at(l)
+            rings.append(m.ring(c, X, no, ru(f), rv(f), sides))
+            if k: m.band(rings[-2], rings[-1], rect, u[0] + (u[1] - u[0]) * (k - 1) / (n - 1), u[0] + (u[1] - u[0]) * f)
+        return rings
 
-    def corner(i, s, j, row=None):
-        r, f, v = uv(s, j)
-        if row is not None:                                            # middle ring seen from the second half
-            r = row; f = 0.0
-        return (i, i, (r[0] + f * (r[1] - r[0])) / 1024.0, (r[2] + v * (r[3] - r[2])) / 1024.0)
+    # gathered hair coming out of the head: wide and flat on the head, round at the tie
+    tube(0.0, ROOT + 0.002, 8, lambda f: 0.0200 - 0.0085 * _smooth(0.25, 1.0, f), lambda f: 0.0125 - 0.0025 * _smooth(0.25, 1.0, f), R_PLAIN, u=(0.0, 0.45))
+    # the hair ties: short sleeves, their rims pulled into the hair
+    for l, r in ((ROOT, 0.0118), (lb, W1 * 0.80)):
+        prof = ((-0.5, 0.86), (-0.32, 1.06), (0.32, 1.06), (0.5, 0.86))
+        rings = []
+        for k, (o, sc) in enumerate(prof):
+            c, t, no = line.at(l + o * TIE)
+            rings.append(m.ring(c, X, no, r * sc, r * sc * 0.86, 8))
+            if k: m.band(rings[-2], rings[-1], R_TIE, k - 1.0, float(k), span=3.0)
+    # three strands plaited around each other: seen from behind a strand comes in from one edge, crosses over the
+    # middle, goes under the next strand and comes back from the other edge
+    K = int(round((lb - la) / STEP)) + 1
+    ls = np.linspace(la, lb, K); ph = np.zeros(K)
+    for k in range(1, K): ph[k] = ph[k - 1] + 2 * math.pi * (ls[k] - ls[k - 1]) / (PERIOD * width(0.5 * (ls[k] + ls[k - 1])) / W0)
 
-    faces = []
-    for k in range(K - 1):
-        (r0, s0), (r1, s1) = rings[k], rings[k + 1]
-        second = s1 > 0.5 + 1e-9
-        for j in range(SIDES):
-            j2 = (j + 1) % SIDES
-            c00 = corner(r0[j], s0, j, ROWS[1] if second and s0 <= 0.5 + 1e-9 else None)
-            c01 = corner(r0[j2], s0, j + 1, ROWS[1] if second and s0 <= 0.5 + 1e-9 else None)
-            c10 = corner(r1[j], s1, j); c11 = corner(r1[j2], s1, j + 1)
-            faces.append([c00, c01, c11]); faces.append([c00, c11, c10])
-    last = rings[-1][0]
-    for j in range(SIDES):
-        j2 = (j + 1) % SIDES
-        faces.append([corner(last[j], 1.0, j), corner(last[j2], 1.0, j + 1), (tip, tip, ROWS[1][1] / 1024.0, (ROWS[1][2] + ROWS[1][3]) / 2048.0)])
-    P = np.array(pts); N = np.array(nrm)
-    cen = {i: np.array([0.0, np.interp(total * s, arc, C[:, 0]), np.interp(total * s, arc, C[:, 1])]) for ring, s in rings for i in ring}
-    cen[tip] = np.array([0.0, C[-1, 0], C[-1, 1]])
-    fixed = []
-    for f in faces:                                                    # MLOD: cross(p1-p0, p2-p0) points inwards
-        p0, p1, p2 = P[f[0][0]], P[f[1][0]], P[f[2][0]]
-        out = (p0 + p1 + p2) / 3 - (cen[f[0][0]] + cen[f[1][0]] + cen[f[2][0]]) / 3
-        fixed.append(f if np.dot(np.cross(p1 - p0, p2 - p0), out) < 0 else [f[0], f[2], f[1]])
-    return P, N, fixed, wts
+    def strand_pos(l, phi):
+        c, t, no = line.at(l); w = width(l)
+        env = _smooth(la - 0.001, la + 0.012, l) * _smooth(lb + 0.001, lb - 0.010, l)   # the strands come out of the ties
+        return c + X * (0.52 * w * env * math.sin(phi)) + no * (-0.30 * w * env * math.sin(2 * phi)), no, w
+
+    for i in range(3):
+        rings = []
+        for k in range(K):
+            phi = ph[k] + 2 * math.pi * i / 3; l = ls[k]
+            dphi = 2 * math.pi * 0.001 / (PERIOD * width(l) / W0)
+            p, no, w = strand_pos(l, phi)
+            t = strand_pos(l + 0.001, phi + dphi)[0] - strand_pos(l - 0.001, phi - dphi)[0]; t /= np.linalg.norm(t)
+            eu = np.cross(t, no); eu /= np.linalg.norm(eu); ev = np.cross(eu, t); ev /= np.linalg.norm(ev)
+            if np.dot(ev, no) < 0: ev = -ev
+            rings.append(m.ring(p, eu, ev, 0.50 * w, 0.34 * w, SIDES))
+            if k:
+                u0 = (ph[k - 1] + 2 * math.pi * i / 3) / (2 * math.pi) % 1.0
+                m.band(rings[-2], rings[-1], R_STRAND, u0, u0 + (ph[k] - ph[k - 1]) / (2 * math.pi), span=1.0 + MARGIN)
+    # the loose end: swells a little below the tie, then thins out to a point
+    n = 9; l0 = lb + TIE * 0.3; rings = []
+    for k in range(n):
+        f = k / (n - 1); l = l0 + (line.total - 0.004 - l0) * f
+        c, t, no = line.at(l)
+        r = W1 * (0.78 + 0.34 * math.sin(math.pi * min(f / 0.55, 1.0)) * (1 - f)) * (1 - 0.72 * _smooth(0.35, 1.0, f))
+        rings.append(m.ring(c + no * 0.0015 * f, X, no, r, r * 0.72, 8))
+        if k: m.band(rings[-2], rings[-1], R_PLAIN, 0.50 + 0.45 * (k - 1) / (n - 1), 0.50 + 0.45 * f)
+    c, t, no = line.at(line.total)
+    tip = m.point(c + no * 0.002, t, c)
+    m.fan(rings[-1], tip, R_PLAIN, 0.95, 1.0)
+    return m.result()
 
 
 def _enc(w):
@@ -138,15 +211,33 @@ def append(b, li, P, N, faces, weights, tex, mat, like):
     return out
 
 
-def braid_strip():
-    """the braid photo as two rows of luminance (first half, second half of the braid), sized like ROWS"""
-    im = Image.open(os.path.join(HERE, "ref", "tex", "hair_01.png")).convert("RGB")
-    w, h = im.size; s = w / 1024.0
-    total = sum(math.hypot(PATH[i + 1][0] - PATH[i][0], PATH[i + 1][1] - PATH[i][1]) for i in range(len(PATH) - 1))
-    px = int(total / 0.00031 * s)                                        # the photo shows about 0.31 mm per texel
-    strip = im.crop((int(6 * s), int(6 * s), int(6 * s) + px, int(101 * s)))
-    rows = []
-    for k, (x0, x1, y0, y1) in enumerate(ROWS):
-        half = strip.crop((k * strip.size[0] // 2, 0, (k + 1) * strip.size[0] // 2, strip.size[1])).resize((x1 - x0, y1 - y0), Image.LANCZOS)
-        rows.append(np.asarray(half, dtype=np.float64) / 255 @ np.array([0.30, 0.59, 0.11]))
-    return rows
+def _fibres(w, h, seed, drift=1.0):
+    """hair running along x: fine streaks that differ across y, repeat in x and y -> (h, w) around 1.0"""
+    r = np.random.default_rng(seed)
+    u = (np.arange(w) + 0.5) / w; v = (np.arange(h) + 0.5) / h
+    out = np.zeros((h, w))
+    for n in range(2, 34):
+        amp = r.uniform(0.5, 1.0) / n ** 0.55
+        ph = r.uniform(0, 6.283) + drift * r.uniform(0.3, 1.1) * np.sin(2 * math.pi * (u * r.integers(1, 3) + r.uniform()))
+        out += amp * np.sin(2 * math.pi * n * v[:, None] + ph[None, :])
+    out /= out.std()
+    return 1.0 + 0.20 * np.clip(out, -2.2, 2.2)
+
+
+def textures():
+    """-> [(rect, luminance (h, w))] for the plaited strands and the plain hair, and the rect of the hair tie.
+    Luminance is relative: 1.0 is the colour of the hair."""
+    x0, x1, y0, y1 = R_STRAND; w, h = x1 - x0, y1 - y0
+    u = (np.arange(w) + 0.5) / w * (1.0 + MARGIN) % 1.0; v = (np.arange(h) + 0.5) / h
+    hair = _fibres(int(round(w / (1.0 + MARGIN))), h, 5)
+    hair = hair[:, (np.arange(w) % hair.shape[1])]
+    q = (2 * u) % 1.0                                  # each strand shows twice per period: 0.5..1 is the visible part
+    sm = lambda e0, e1, x: (lambda t: t * t * (3 - 2 * t))(np.clip((x - e0) / (e1 - e0), 0, 1))
+    along = np.where(q >= 0.5, 1.0 - 0.62 * sm(0.80, 1.0, q) - 0.22 * sm(0.62, 0.5, q), 0.42)   # dives under the next strand
+    out_facing = np.sin(2 * math.pi * v)                # 1 on the side facing away from the braid's middle plane
+    around = 0.58 + 0.42 * np.clip(out_facing, -0.2, 1) ** 1
+    sheen = 0.30 * np.exp(-((q - 0.70) / 0.085) ** 2)[None, :] * np.clip(out_facing, 0, 1)[:, None] ** 2
+    strand = hair * (along[None, :] * around[:, None] + sheen)
+    x0, x1, y0, y1 = R_PLAIN; w, h = x1 - x0, y1 - y0; v = (np.arange(h) + 0.5) / h
+    plain = _fibres(w, h, 9, drift=0.6) * (0.74 + 0.26 * np.sin(2 * math.pi * v))[:, None]
+    return [(R_STRAND, strand), (R_PLAIN, plain)], R_TIE

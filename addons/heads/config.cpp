@@ -55,12 +55,6 @@ class CfgHeads {
     class mhfh_novak_braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_novak_braid.p3d";
     };
-    class mhfh_haddad: bun_female_bun_01 {
-        model = "\z\mhfh\addons\heads\models\mhfh_haddad.p3d";
-    };
-    class mhfh_haddad_braid: bun_female_bun_01 {
-        model = "\z\mhfh\addons\heads\models\mhfh_haddad_braid.p3d";
-    };
 };
 
 class CfgFaces {
@@ -76,7 +70,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_kovacs_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_kovacs_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_kovacs_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -87,7 +83,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_kovacs_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_kovacs_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_kovacs_braid: B_female_bun_01 {
             author = "Miss Heda";
@@ -98,7 +96,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_kovacs_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_kovacs_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_kovacs";
         };
         class mhfh_kovacs_braid_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -109,7 +110,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_kovacs_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_kovacs_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_kovacs_tac";
         };
         class mhfh_reyes: B_female_bun_01 {
             author = "Miss Heda";
@@ -120,7 +124,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_reyes_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_reyes_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_reyes_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -131,7 +137,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_reyes_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_reyes_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_reyes_braid: B_female_bun_01 {
             author = "Miss Heda";
@@ -142,7 +150,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_reyes_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_reyes_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_reyes";
         };
         class mhfh_reyes_braid_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -153,7 +164,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_reyes_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_reyes_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_reyes_tac";
         };
         class mhfh_okoye: B_female_bun_01 {
             author = "Miss Heda";
@@ -164,7 +178,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_okoye_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_okoye_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_okoye_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -175,7 +191,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_okoye_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_okoye_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_okoye_braid: B_female_bun_01 {
             author = "Miss Heda";
@@ -186,7 +204,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_okoye_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_okoye_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_okoye";
         };
         class mhfh_okoye_braid_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -197,7 +218,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_okoye_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_okoye_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_okoye_tac";
         };
         class mhfh_walsh: B_female_bun_01 {
             author = "Miss Heda";
@@ -208,7 +232,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_walsh_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -219,7 +245,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_walsh_braid: B_female_bun_01 {
             author = "Miss Heda";
@@ -230,7 +258,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_walsh";
         };
         class mhfh_walsh_braid_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -241,7 +272,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_walsh_tac";
         };
         class mhfh_lindqvist: B_female_bun_01 {
             author = "Miss Heda";
@@ -252,7 +286,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_lindqvist_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_lindqvist_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_lindqvist_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -263,7 +299,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_lindqvist_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_lindqvist_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_lindqvist_braid: B_female_bun_01 {
             author = "Miss Heda";
@@ -274,7 +312,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_lindqvist_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_lindqvist_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_lindqvist";
         };
         class mhfh_lindqvist_braid_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -285,7 +326,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_lindqvist_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_lindqvist_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_lindqvist_tac";
         };
         class mhfh_fraser: B_female_bun_01 {
             author = "Miss Heda";
@@ -296,7 +340,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_fraser_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -307,7 +353,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_fraser_braid: B_female_bun_01 {
             author = "Miss Heda";
@@ -318,7 +366,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_fraser";
         };
         class mhfh_fraser_braid_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -329,7 +380,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_fraser_tac";
         };
         class mhfh_novak: B_female_bun_01 {
             author = "Miss Heda";
@@ -340,7 +394,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_novak_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_novak_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_novak_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -351,7 +407,9 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_novak_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_novak_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
         };
         class mhfh_novak_braid: B_female_bun_01 {
             author = "Miss Heda";
@@ -362,7 +420,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_novak_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_novak_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_novak";
         };
         class mhfh_novak_braid_tac: B_female_bun_01 {
             author = "Miss Heda";
@@ -373,51 +434,10 @@ class CfgFaces {
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             textureHL = "\z\mhfh\addons\heads\data\mhfh_novak_hl_co.paa";
+            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_novak_hl_co.paa";
-        };
-        class mhfh_haddad: B_female_bun_01 {
-            author = "Miss Heda";
-            displayName = "Haddad";
-            head = "mhfh_haddad";
-            texture = "\z\mhfh\addons\heads\data\mhfh_haddad_co.paa";
-            material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            textureHL = "\z\mhfh\addons\heads\data\mhfh_haddad_hl_co.paa";
-            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_haddad_hl_co.paa";
-        };
-        class mhfh_haddad_tac: B_female_bun_01 {
-            author = "Miss Heda";
-            displayName = "Haddad (Tactical)";
-            head = "mhfh_haddad";
-            texture = "\z\mhfh\addons\heads\data\mhfh_haddad_tac_co.paa";
-            material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            textureHL = "\z\mhfh\addons\heads\data\mhfh_haddad_hl_co.paa";
-            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_haddad_hl_co.paa";
-        };
-        class mhfh_haddad_braid: B_female_bun_01 {
-            author = "Miss Heda";
-            displayName = "Haddad (Braid)";
-            head = "mhfh_haddad_braid";
-            texture = "\z\mhfh\addons\heads\data\mhfh_haddad_braid_co.paa";
-            material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            textureHL = "\z\mhfh\addons\heads\data\mhfh_haddad_hl_co.paa";
-            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_haddad_hl_co.paa";
-        };
-        class mhfh_haddad_braid_tac: B_female_bun_01 {
-            author = "Miss Heda";
-            displayName = "Haddad (Braid, Tactical)";
-            head = "mhfh_haddad_braid";
-            texture = "\z\mhfh\addons\heads\data\mhfh_haddad_braid_tac_co.paa";
-            material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            textureHL = "\z\mhfh\addons\heads\data\mhfh_haddad_hl_co.paa";
-            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_haddad_hl_co.paa";
+            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
+            mhfh_bunFace = "mhfh_novak_tac";
         };
     };
 };
