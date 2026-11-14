@@ -16,7 +16,7 @@ import mlod
 # strap below it (height 0.69..0.70, depth up to 0.084), then hanging down behind the neck onto the back
 PATH = [(0.729, 0.058), (0.728, 0.072), (0.725, 0.084), (0.716, 0.096), (0.700, 0.105), (0.676, 0.110), (0.645, 0.110),
         (0.612, 0.109), (0.582, 0.110), (0.560, 0.115), (0.540, 0.121), (0.522, 0.126)]
-ROOT = 0.024                     # arc length of the gathered hair before the first tie: the tie sits on the head
+ROOT = 0.0175                    # arc length of the gathered hair before the first tie: the tie sits in the scalp, only its rim shows
 TAIL = 0.048                     # length of the loose end after the second tie
 TIE = 0.007                      # length of a hair tie
 W0, W1 = 0.0210, 0.0145          # half width of the braid at its top and at its lower tie

@@ -104,6 +104,23 @@ def paint_layer(m):
     a = a * smooth(0.04, 0.10, a) * on                                 # no haze where there is no paint
     paint = np.clip(paint + rest * smooth(0.3, 0.7, a)[..., None], 0, 1)
     print(f"face paint: olive {olive.round(3)}, black {black.round(3)}, not explained {float(np.abs(rest[strong]).mean()):.3f}")
+    # Two changes to their pattern. The upper forehead is nearly bare on one side: more olive there, as strokes
+    # running the way theirs do. And the ears carry a lot of paint: nearly half of it comes off.
+    pos = m["pos"]; x, y, z = pos[..., 0], pos[..., 1], pos[..., 2]
+    thick = (a > 0.85) & m["cov"]; l = paint @ np.array([0.30, 0.59, 0.11])
+    olive_thick = np.median(paint[thick & (l > np.percentile(l[thick], 55))], 0)
+    across = np.array([0.90, -0.44, 0.0]); along = np.array([0.44, 0.90, 0.0])
+    q = np.stack([pos @ across, (pos @ along) * 0.30, z * 0.5], -1)
+    strokes = sine_noise(q, 330.0, 5, 10, (0.6, 1.6)) + 0.12 * sine_noise(pos, 700.0, 6, 8)
+    zone = smooth(0.744, 0.756, y) * smooth(-0.055, -0.075, z) * smooth(0.070, 0.058, np.abs(x)) * m["cov"]
+    more = zone * smooth(-0.45, 0.05, strokes) * 0.90
+    # their colour: the paint next to it carried on, olive where there is none near
+    near = blurf(a, 14); cont = np.stack([blurf(paint[..., i] * a, 14) for i in range(3)], -1) / np.maximum(near, 1e-3)[..., None]
+    colour = lerp(np.broadcast_to(olive_thick, paint.shape), cont, smooth(0.05, 0.25, near)) * (1 + 0.04 * sine_noise(q, 900.0, 7, 8))[..., None]
+    paint = lerp(paint, np.clip(colour, 0, 1), np.clip((more - a) / np.maximum(more, 1e-3), 0, 1))
+    a = np.maximum(a, more)
+    ear = np.zeros(a.shape); ear[:140, :230] = 1.0                    # the ears have their own corner of the texture
+    a = a * (1 - 0.45 * ear)
     m["paint"] = (a, paint); return m["paint"]
 
 
@@ -160,24 +177,30 @@ def hair_to_braid(m, hlum):
     ref = head & (m["hair"] > 0.9) & (np.abs(s) < 0.05) & (t > tr - 0.075) & (t < tr - 0.035)
     level = float(np.median(hlum[ref])); sigma = float((hlum - blurf(hlum, 3))[ref].std()) / level
     res = res * (1 + (np.clip(level / np.maximum(blurf(res, 22), 1e-3), 0.6, 2.5) - 1) * 0.8 * smooth(0.0, 0.25, k))
-    # 4. Right around the start of the braid fine strands are drawn over the photo hair, which after moving and
-    # mirroring does not run to the braid everywhere. Only fine ones and only as a part of the picture: wide rays
-    # all the way round look like a star, which hair never does. They also do not run dead straight to one point:
-    # their direction wanders with the place, and how much of them shows differs from spot to spot.
-    rr = np.hypot(s, t - tr); near = head & (rr < 0.07)
+    # 4. Fine strands are drawn over the photo hair where it does not run to the braid after all that:
+    #   - right around the start of the braid, as a part of the picture only and in patches. Wide rays all the way
+    #     round look like a star, which hair never does;
+    #   - below the start of the braid, down to the nape and behind the ears, nearly all of the picture. That hair
+    #     is the little there was under the bun, stretched to several times its length: flat, with stray lights
+    #     running anywhere. Those are taken out (only light and dark of the area stay) and strands drawn instead.
+    # They do not run dead straight to one point: their direction wanders with the place.
+    rr = np.hypot(s, t - tr); near = head & ((rr < 0.07) | (k > 0.001))
     pn = pos[near]; r_ = rr[near]
-    phi = np.arctan2(t - tr, s)[near] + 0.30 * sine_noise(pn, 45.0, 21, 6, (0.6, 1.6)) + 0.12 * sine_noise(pn, 140.0, 22, 6)
+    # (by a few millimetres sideways at any distance: hair pulled into a braid is taut, not wavy)
+    bend = np.minimum(0.30, 0.005 / np.maximum(r_, 0.01))
+    phi = np.arctan2(t - tr, s)[near] + bend * (sine_noise(pn, 45.0, 21, 6, (0.6, 1.6)) + 0.3 * sine_noise(pn, 140.0, 22, 6))
     rng = np.random.default_rng(8); n = np.zeros(r_.shape); tot = np.zeros(r_.shape)
-    for mm in np.unique(np.round(np.exp(rng.uniform(math.log(28), math.log(330), 80))).astype(int)):
+    for mm in np.unique(np.round(np.exp(rng.uniform(math.log(22), math.log(420), 90))).astype(int)):
         fade = smooth(1300.0, 650.0, mm / (2 * math.pi * np.maximum(r_, 1e-3)))        # no strands thinner than the texels
         amp = mm ** -0.2 * fade
         n += amp * np.sin(mm * phi + rng.uniform(0, 6.283) + rng.uniform(0.4, 1.4) * np.sin(r_ * rng.uniform(25, 70) + rng.uniform(0, 6.283)))
         tot += amp ** 2 / 2
     n /= np.sqrt(np.maximum(tot, 1e-6))
+    below = (smooth(tr - 0.006, tr + 0.022, t) * smooth(0.0, 0.10, k))[near] * 0.9
     local = np.maximum(blurf(res, 6), 1e-3)[near]                                      # light and dark of the photo stay
-    drawn = local * np.clip(1 + 1.1 * sigma * n, 0.4, 1.9)
+    drawn = local * np.clip(1 + (1.1 + 0.5 * below) * sigma * n, 0.4, 1.9)
     patchy = 0.25 + 0.30 * smooth(-0.8, 0.8, sine_noise(pn, 70.0, 23, 8, (0.6, 1.6)))
-    wd = smooth(0.062, 0.028, r_) * patchy
+    wd = np.maximum(smooth(0.062, 0.028, r_) * patchy, below)
     res[near] = res[near] * (1 - wd) + drawn * wd
     return res
 
