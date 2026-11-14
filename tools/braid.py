@@ -14,15 +14,15 @@ import mlod
 
 # centre line (height, depth): from inside the head through the cap opening (height 0.705..0.745), clear of the
 # strap below it (height 0.69..0.70, depth up to 0.084), then hanging down behind the neck onto the back
-PATH = [(0.729, 0.058), (0.728, 0.074), (0.725, 0.088), (0.714, 0.100), (0.696, 0.107), (0.670, 0.109), (0.640, 0.107),
-        (0.610, 0.105), (0.582, 0.106), (0.560, 0.110), (0.540, 0.116), (0.524, 0.121)]
-ROOT = 0.036                     # arc length of the gathered hair before the first tie
-TAIL = 0.046                     # length of the loose end after the second tie
-TIE = 0.006                      # length of a hair tie
-W0, W1 = 0.0175, 0.0125          # half width of the braid at its top and at its lower tie
-PERIOD = 0.050                   # length over which one strand goes left, right and back, at the top
-STEP = 0.0042                    # distance between two rings of a strand
-SIDES = 6
+PATH = [(0.729, 0.058), (0.728, 0.072), (0.725, 0.084), (0.716, 0.096), (0.700, 0.105), (0.676, 0.110), (0.645, 0.110),
+        (0.612, 0.109), (0.582, 0.110), (0.560, 0.115), (0.540, 0.121), (0.522, 0.126)]
+ROOT = 0.024                     # arc length of the gathered hair before the first tie: the tie sits on the head
+TAIL = 0.048                     # length of the loose end after the second tie
+TIE = 0.007                      # length of a hair tie
+W0, W1 = 0.0210, 0.0145          # half width of the braid at its top and at its lower tie
+PERIOD = 0.060                   # length over which one strand goes left, right and back, at the top
+STEP = 0.0030                    # distance between two rings of a strand
+SIDES = 9
 # atlas areas in the old bun area of the 1024 atlas (pixels: x0, x1, y0, y1). A corner of the chest reaches into
 # the top left of that area (up to x 811 at y 778, x 758 at y 834), so nothing of the braid lies there.
 R_STRAND, R_PLAIN, R_TIE = (778, 1004, 842, 926), (778, 1004, 938, 992), (860, 1000, 796, 824)
@@ -96,6 +96,15 @@ class _Mesh:
             j2 = (j + 1) % n
             s.F.append([(r[j], r[j], *uv(u0, j)), (r[j2], r[j2], *uv(u0, j + 1)), (tip, tip, *uv(u1, j + 0.5))])
 
+    def cap(s, r, c, axis, rect, u):
+        """closes the end of a tube: a fan to its middle. axis points out of the tube. Without it the game shows
+        the inside of the tube as a hole (faces are only drawn from outside)."""
+        mid = s.point(c, axis, c - np.asarray(axis) * 0.004); n = len(r); x0, x1, y0, y1 = rect
+        for j in range(n):
+            j2 = (j + 1) % n; uu = (x0 + u * (x1 - x0)) / 1024.0
+            s.F.append([(r[j], r[j], uu, (y0 + j / n * (y1 - y0)) / 1024.0), (r[j2], r[j2], uu, (y0 + (j + 1) / n * (y1 - y0)) / 1024.0),
+                        (mid, mid, uu, (y0 + (j + 0.5) / n * (y1 - y0)) / 1024.0)])
+
     def result(s):
         P = np.array(s.P); N = np.array(s.N); cen = np.array(s.cen); out = []
         for f in s.F:                                                    # MLOD: cross(p1-p0, p2-p0) points inwards
@@ -111,7 +120,7 @@ def braid_mesh():
     la, lb = ROOT + TIE * 0.5, line.total - TAIL - TIE * 0.5             # the plaited part
     width = lambda l: W0 + (W1 - W0) * _smooth(la, lb, l) ** 0.8
 
-    def tube(l0, l1, n, ru, rv, rect, sides=8, u=(0.0, 1.0)):
+    def tube(l0, l1, n, ru, rv, rect, sides=12, u=(0.0, 1.0)):
         rings = []
         for k in range(n):
             f = k / (n - 1); l = l0 + (l1 - l0) * f
@@ -121,15 +130,18 @@ def braid_mesh():
         return rings
 
     # gathered hair coming out of the head: wide and flat on the head, round at the tie
-    tube(0.0, ROOT + 0.002, 8, lambda f: 0.0200 - 0.0085 * _smooth(0.25, 1.0, f), lambda f: 0.0125 - 0.0025 * _smooth(0.25, 1.0, f), R_PLAIN, u=(0.0, 0.45))
-    # the hair ties: short sleeves, their rims pulled into the hair
-    for l, r in ((ROOT, 0.0118), (lb, W1 * 0.80)):
-        prof = ((-0.5, 0.86), (-0.32, 1.06), (0.32, 1.06), (0.5, 0.86))
+    rings = tube(0.0, ROOT + 0.002, 7, lambda f: 0.0230 - 0.0100 * _smooth(0.2, 1.0, f), lambda f: 0.0140 - 0.0030 * _smooth(0.2, 1.0, f), R_PLAIN, u=(0.0, 0.45))
+    c, t, no = line.at(ROOT + 0.002); m.cap(rings[-1], c, t, R_PLAIN, 0.45)
+    # the hair ties: short sleeves, their rims pulled into the hair, closed at both ends
+    for l, r in ((ROOT, 0.0128), (lb, W1 * 0.86)):
+        prof = ((-0.5, 0.84), (-0.34, 1.07), (0.34, 1.07), (0.5, 0.84))
         rings = []
         for k, (o, sc) in enumerate(prof):
             c, t, no = line.at(l + o * TIE)
-            rings.append(m.ring(c, X, no, r * sc, r * sc * 0.86, 8))
+            rings.append(m.ring(c, X, no, r * sc, r * sc * 0.86, 12))
             if k: m.band(rings[-2], rings[-1], R_TIE, k - 1.0, float(k), span=3.0)
+        c, t, no = line.at(l - 0.5 * TIE); m.cap(rings[0], c, -t, R_TIE, 0.5)
+        c, t, no = line.at(l + 0.5 * TIE); m.cap(rings[-1], c, t, R_TIE, 0.5)
     # three strands plaited around each other: seen from behind a strand comes in from one edge, crosses over the
     # middle, goes under the next strand and comes back from the other edge
     K = int(round((lb - la) / STEP)) + 1
@@ -139,7 +151,7 @@ def braid_mesh():
     def strand_pos(l, phi):
         c, t, no = line.at(l); w = width(l)
         env = _smooth(la - 0.001, la + 0.012, l) * _smooth(lb + 0.001, lb - 0.010, l)   # the strands come out of the ties
-        return c + X * (0.52 * w * env * math.sin(phi)) + no * (-0.30 * w * env * math.sin(2 * phi)), no, w
+        return c + X * (0.50 * w * env * math.sin(phi)) + no * (-0.30 * w * env * math.sin(2 * phi)), no, w
 
     for i in range(3):
         rings = []
@@ -150,17 +162,19 @@ def braid_mesh():
             t = strand_pos(l + 0.001, phi + dphi)[0] - strand_pos(l - 0.001, phi - dphi)[0]; t /= np.linalg.norm(t)
             eu = np.cross(t, no); eu /= np.linalg.norm(eu); ev = np.cross(eu, t); ev /= np.linalg.norm(ev)
             if np.dot(ev, no) < 0: ev = -ev
-            rings.append(m.ring(p, eu, ev, 0.50 * w, 0.34 * w, SIDES))
+            rings.append(m.ring(p, eu, ev, 0.52 * w, 0.40 * w, SIDES))
+            if k in (0, K - 1): m.cap(rings[-1], p, -t if k == 0 else t, R_STRAND, 0.9)
             if k:
                 u0 = (ph[k - 1] + 2 * math.pi * i / 3) / (2 * math.pi) % 1.0
                 m.band(rings[-2], rings[-1], R_STRAND, u0, u0 + (ph[k] - ph[k - 1]) / (2 * math.pi), span=1.0 + MARGIN)
     # the loose end: swells a little below the tie, then thins out to a point
-    n = 9; l0 = lb + TIE * 0.3; rings = []
+    n = 11; l0 = lb + TIE * 0.3; rings = []
     for k in range(n):
         f = k / (n - 1); l = l0 + (line.total - 0.004 - l0) * f
         c, t, no = line.at(l)
         r = W1 * (0.78 + 0.34 * math.sin(math.pi * min(f / 0.55, 1.0)) * (1 - f)) * (1 - 0.72 * _smooth(0.35, 1.0, f))
-        rings.append(m.ring(c + no * 0.0015 * f, X, no, r, r * 0.72, 8))
+        rings.append(m.ring(c + no * 0.0015 * f, X, no, r, r * 0.80, 12))
+        if k == 0: m.cap(rings[-1], c, -t, R_PLAIN, 0.5)
         if k: m.band(rings[-2], rings[-1], R_PLAIN, 0.50 + 0.45 * (k - 1) / (n - 1), 0.50 + 0.45 * f)
     c, t, no = line.at(line.total)
     tip = m.point(c + no * 0.002, t, c)

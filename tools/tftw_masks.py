@@ -20,6 +20,14 @@ def blur(a, r):
     return np.asarray(Image.fromarray((np.clip(a, 0, 1) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(r)), dtype=np.float64) / 255
 
 
+def blurf(a, r):
+    """Gaussian blur in float: blur() works on 8 bit and leaves steps in soft gradients"""
+    pad = int(3 * r) + 1; b = np.pad(np.asarray(a, dtype=np.float64), pad, mode="reflect")
+    fy = np.fft.fftfreq(b.shape[0])[:, None]; fx = np.fft.rfftfreq(b.shape[1])[None, :]
+    g = np.exp(-2 * (np.pi * r) ** 2 * (fx ** 2 + fy ** 2))
+    return np.fft.irfft2(np.fft.rfft2(b) * g, s=b.shape)[pad:-pad, pad:-pad]
+
+
 def load(name):
     return np.asarray(Image.open(os.path.join(REF, "tex", name + ".png")).convert("RGB").resize((N, N), Image.LANCZOS), dtype=np.float64) / 255
 
@@ -77,17 +85,22 @@ def build(base):
         own = blur(smooth(0.105, 0.135, sat) * smooth(0.020, 0.011, detail) * smooth(0.18, 0.28, lum), 4.0)
         ax0 = np.abs(x)
         face0 = smooth(-0.070, -0.088, z) * smooth(0.595, 0.610, y) * smooth(0.752, 0.738, y) * smooth(0.066, 0.054, ax0) * cov
-        known = ((own > 0.80) | (face0 > 0.5)) & region
+        # Her hairline is thin hair over skin: it passes as skin by its colour and would stay as grey smudges on
+        # the forehead. So only skin well inside what looks like skin is kept, the rim is filled like the hair.
+        clean = (blurf((own > 0.80).astype(float), 7) > 0.97) | (face0 > 0.5)
+        known = clean & region
         filled = tex.copy(); done = known.copy()
         for rad in (2, 4, 8, 16, 32, 64):
-            k = blur(known.astype(float), rad)
-            est = np.stack([blur(tex[..., i] * known, rad) for i in range(3)], -1) / np.maximum(k, 1e-3)[..., None]
+            k = blurf(known.astype(float), rad)
+            est = np.stack([blurf(tex[..., i] * known, rad) for i in range(3)], -1) / np.maximum(k, 1e-4)[..., None]
             take = ~done & (k > 0.03)
             filled[take] = est[take]; done |= take
+        filled = np.stack([blurf(filled[..., i], 1.5) for i in range(3)], -1) * (~known)[..., None] + filled * known[..., None]
         grain = np.random.default_rng(3).normal(0, 0.006, (N, N, 1))
-        soft = smooth(0.80, 0.45, blur(own, 3)) * (1 - face0)          # 1 where this texture is not clearly skin
+        soft = smooth(0.85, 0.35, blurf(known.astype(float), 2.5))     # 1 where this texture is not clearly skin
         tex = tex * (1 - soft[..., None]) + np.clip(filled + grain, 0, 1) * soft[..., None]
-        tex = np.where((region & (skinc > 0.02))[..., None], tex, load(base))
+        # (also under light pixels of the hair: there the hair is taken as thin and the skin shows through)
+        tex = np.where((region & ((skinc > 0.02) | (hairlum > 0.14)))[..., None], tex, load(base))
         lum = tex @ np.array([0.30, 0.59, 0.11]); r, g, b = tex[..., 0], tex[..., 1], tex[..., 2]
     # The middle of the face is never hair: lashes, nostrils and the line between the lips are dark, but not hair.
     ax_ = np.abs(x)

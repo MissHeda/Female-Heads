@@ -44,8 +44,9 @@ repository). `tools/characters.py` then writes everything in `addons/heads`:
   (`tools/tftw_masks.py` finds skin, hair, brows, lips and iris in their texture layout). The hair of every
   character is the photographed hair of the dark-haired Timberwolf face with its soft hairline, recoloured;
   on the other face the own blonde hair is replaced by skin first. On the braid variant the hair runs to the
-  start of the braid instead of to the bun (`hair_to_braid`). The Tactical variant gets an own camouflage paint
-  per character (`face_paint`: stripes or blotches in two or three colours over face, ears and neck). The iris keeps the light and dark of the photographed one and only changes its tint.
+  start of the braid instead of to the bun (`hair_to_braid`: the photo hair is moved up, and right around the
+  start of the braid the strands are drawn). The Tactical variant is the Timberwolf face paint laid over the
+  new skin: where their painted face still shows skin, ours shows. The iris keeps the light and dark of the photographed one and only changes its tint.
   The texture for arms and legs gets the tone of the neck and uses the same shader as the face
   (`mhfh_hl.rvmat`), so both have the same colour where they meet.
 - **Models:** the Timberwolf head with a slightly different face shape per character (jaw, chin, nose, cheeks,
@@ -71,5 +72,5 @@ Add a character by adding an entry to `CHARS` in `tools/characters.py` and runni
 
 ## Credits
 
-- Head model and face textures: Task Force Timberwolf Female Characters by Iceman.
+- Head model, face textures and face paint: Task Force Timberwolf Female Characters by Iceman.
 - Skeleton in `model.cfg`: Arma 3 Samples, Bohemia Interactive.
