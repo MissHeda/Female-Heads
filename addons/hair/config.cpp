@@ -28,5 +28,6 @@ class CfgPatches {
 //       };
 //   };
 //
-// The same works for a face of another mod that has a version without the braid:
-// mhfh_bunFace = "<class of that face>"; in its CfgFaces class.
+// Faces of another mod that come with a bun and with a braid take part when they name each
+// other in their CfgFaces classes: the braid face with mhfh_bunFace = "<bun face>"; the bun
+// face with mhfh_braidFace = "<braid face>";

@@ -5,19 +5,46 @@
             <English>Headgear worn with the braid</English>
         </Key>
         <Key ID="STR_mhfh_hair_SETTING_BraidHeadgear_DESC">
-            <English>Class names of the headgear a braid\nfits under, separated by commas.\n\nEverything that inherits from one of\nthem counts as well. With any other\nheadgear the character wears her bun.\n\nDefault: the baseball caps, where the\nbraid comes out through the opening\nat the back.</English>
+            <English>Class names of the headgear the\ncharacter wears her braid with,\nseparated by commas.\n\nEverything that inherits from one of\nthem counts as well.\n\nDefault: the baseball caps, where the\nbraid comes out through the opening\nat the back.</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_SETTING_BunHeadgear">
+            <English>Headgear worn with the bun</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_SETTING_BunHeadgear_DESC">
+            <English>Class names of the headgear the\ncharacter wears her bun with,\nseparated by commas.\n\nEverything that inherits from one of\nthem counts as well. This list goes\nbefore the one for the braid.</English>
         </Key>
         <Key ID="STR_mhfh_hair_SETTING_Category">
             <English>MH Female Heads</English>
         </Key>
         <Key ID="STR_mhfh_hair_SETTING_Enabled">
-            <English>Bun under helmets</English>
+            <English>Hair follows the headgear</English>
         </Key>
         <Key ID="STR_mhfh_hair_SETTING_Enabled_DESC">
-            <English>A character with a braid switches to\nher bun while she wears a helmet and\ngets the braid back when it comes off.\n\nOff: a braid always stays a braid and\ngoes through the helmet.</English>
+            <English>A character switches between her\nbraid and her bun with what she wears\non her head, by the settings below.\n\nOff: she always has the hair of the\nface that was picked for her.</English>
         </Key>
-        <Key ID="STR_mhfh_hair_SETTING_SubCategory_Braid">
+        <Key ID="STR_mhfh_hair_SETTING_NoHeadgear">
+            <English>Without headgear</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_SETTING_NoHeadgear_DESC">
+            <English>The hair while nothing is worn on\nthe head.\n\nAs picked: the hair of the face that\nwas picked for the character.</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_SETTING_OtherHeadgear">
+            <English>All other headgear</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_SETTING_OtherHeadgear_DESC">
+            <English>The hair under headgear that is in\nneither of the two lists below.\n\nDefault: the bun, because a braid\ngoes through a helmet.</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_SETTING_SubCategory_Headgear">
+            <English>Headgear</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_STYLE_Braid">
             <English>Braid</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_STYLE_Bun">
+            <English>Bun</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_STYLE_Keep">
+            <English>As picked</English>
         </Key>
     </Package>
 </Project>

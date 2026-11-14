@@ -1,12 +1,13 @@
 #include "..\script_component.hpp"
 /*
  * Author: Miss Heda
- * Makes the hair of a unit fit what it wears on its head. A unit with a braid face is given
- * the bun version of that face while its headgear leaves no room for the braid, and gets its
- * braid back when the headgear comes off or is one the braid fits under.
+ * Makes the hair of a unit fit what it wears on its head. Every character exists with a bun
+ * and with a braid; which one a unit shows follows the settings: one answer for no headgear,
+ * one list of headgear for the braid, one for the bun, one answer for everything else. An
+ * answer can also be "leave it": then the unit has the face that was picked for it.
  *
- * Only the machine that owns the unit acts; the face change is sent to everyone, late joiners
- * included.
+ * Only the machine that owns the unit acts, by its own settings; the face change is sent to
+ * everyone, late joiners included.
  *
  * Arguments:
  * 0: Unit <OBJECT>
@@ -26,49 +27,50 @@ if (isNull _unit || {!local _unit} || {!alive _unit}) exitWith {};
 
 private _face = face _unit;
 private _bunFace = BUN_FACE(_face);
-private _braidFace = _unit getVariable [BRAID_VAR, ""];
+private _braidFace = BRAID_FACE(_face);
+private _ownFace = _unit getVariable [OWN_VAR, ""];
 
-private _setFace = {
-    params ["_unit", "_newFace"];
-
-    // setFace only changes the face on the machine it runs on.
-    _unit setFace _newFace;
-    [_unit, _newFace] remoteExec ["setFace", 0, _unit];
-};
-
-// Switched off: whoever was given a bun gets the braid back, nobody is touched after that.
-if !(missionNamespace getVariable [QGVAR(enabled), true]) exitWith {
-    if (_braidFace isNotEqualTo "") then {
-        if (toLowerANSI _face isEqualTo toLowerANSI BUN_FACE(_braidFace)) then {
-            [_unit, _braidFace] call _setFace;
-        };
-        _unit setVariable [BRAID_VAR, nil, true];
+// Not one of the faces that come in both versions.
+if (_bunFace isEqualTo "" && {_braidFace isEqualTo ""}) exitWith {
+    if (_ownFace isNotEqualTo "") then {
+        _unit setVariable [OWN_VAR, nil, true];
     };
 };
 
-private _keepsBraid = [headgear _unit] call FUNC(keepsBraid);
+// A braid face names its bun face, a bun face its braid face.
+private _hasBraid = _bunFace isNotEqualTo "";
+private _otherFace = [_braidFace, _bunFace] select _hasBraid;
 
-// Wearing a braid: fine unless the headgear is in the way.
-if (_bunFace isNotEqualTo "") exitWith {
-    if (_keepsBraid) then {
-        if (_braidFace isNotEqualTo "") then {
-            _unit setVariable [BRAID_VAR, nil, true];
-        };
-    } else {
-        _unit setVariable [BRAID_VAR, _face, true];
-        [_unit, _bunFace] call _setFace;
-    };
+// Somebody gave the unit another character in the meantime: what was remembered is void.
+if (_ownFace isNotEqualTo "" && {!(toLowerANSI _ownFace in [toLowerANSI _face, toLowerANSI _otherFace])}) then {
+    _ownFace = "";
+    _unit setVariable [OWN_VAR, nil, true];
 };
 
-// Not wearing a braid, and never had one taken away: nothing to do.
-if (_braidFace isEqualTo "") exitWith {};
-
-// Somebody gave the unit another face in the meantime: that one stays.
-if (toLowerANSI _face isNotEqualTo toLowerANSI BUN_FACE(_braidFace)) exitWith {
-    _unit setVariable [BRAID_VAR, nil, true];
+private _style = if (missionNamespace getVariable [QGVAR(enabled), true]) then {
+    [headgear _unit] call FUNC(headgearStyle)
+} else {
+    STYLE_KEEP
 };
 
-if (_keepsBraid) then {
-    _unit setVariable [BRAID_VAR, nil, true];
-    [_unit, _braidFace] call _setFace;
+private _wanted = switch (_style) do {
+    case STYLE_BRAID: {[_otherFace, _face] select _hasBraid};
+    case STYLE_BUN: {[_face, _otherFace] select _hasBraid};
+    default {[_ownFace, _face] select (_ownFace isEqualTo "")};
 };
+
+// Back at the face that was picked for the unit, or never away from it: nothing to remember.
+if (_ownFace isNotEqualTo "" && {toLowerANSI _wanted isEqualTo toLowerANSI _ownFace}) then {
+    _unit setVariable [OWN_VAR, nil, true];
+};
+
+if (toLowerANSI _wanted isEqualTo toLowerANSI _face) exitWith {};
+
+// The first change away from the picked face: remember it.
+if (_ownFace isEqualTo "") then {
+    _unit setVariable [OWN_VAR, _face, true];
+};
+
+// setFace only changes the face on the machine it runs on.
+_unit setFace _wanted;
+[_unit, _wanted] remoteExec ["setFace", 0, _unit];

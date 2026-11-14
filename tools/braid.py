@@ -14,12 +14,12 @@ import mlod
 
 # centre line (height, depth): from inside the head through the cap opening (height 0.705..0.745), clear of the
 # strap below it (height 0.69..0.70, depth up to 0.084), then hanging down behind the neck onto the back
-PATH = [(0.729, 0.058), (0.728, 0.072), (0.725, 0.084), (0.716, 0.096), (0.700, 0.105), (0.676, 0.110), (0.645, 0.110),
+PATH = [(0.726, 0.058), (0.725, 0.072), (0.722, 0.084), (0.714, 0.096), (0.699, 0.105), (0.676, 0.110), (0.645, 0.110),
         (0.612, 0.109), (0.582, 0.110), (0.560, 0.115), (0.540, 0.121), (0.522, 0.126)]
-ROOT = 0.0175                    # arc length of the gathered hair before the first tie: the tie sits in the scalp, only its rim shows
+ROOT = 0.0265                    # arc length up to the first tie: it sits clear of the head, on the hair gathered below it
 TAIL = 0.048                     # length of the loose end after the second tie
-TIE = 0.007                      # length of a hair tie
-W0, W1 = 0.0210, 0.0145          # half width of the braid at its top and at its lower tie
+TIE = 0.010                      # length of a hair tie
+W0, W1 = 0.0230, 0.0150          # half width of the braid at its top and at its lower tie
 PERIOD = 0.060                   # length over which one strand goes left, right and back, at the top
 STEP = 0.0030                    # distance between two rings of a strand
 SIDES = 9
@@ -129,12 +129,14 @@ def braid_mesh():
             if k: m.band(rings[-2], rings[-1], rect, u[0] + (u[1] - u[0]) * (k - 1) / (n - 1), u[0] + (u[1] - u[0]) * f)
         return rings
 
-    # gathered hair coming out of the head: wide and flat on the head, round at the tie
-    rings = tube(0.0, ROOT + 0.002, 7, lambda f: 0.0230 - 0.0100 * _smooth(0.2, 1.0, f), lambda f: 0.0140 - 0.0030 * _smooth(0.2, 1.0, f), R_PLAIN, u=(0.0, 0.45))
+    # gathered hair coming out of the head. All the hair of the head runs together here and lies on top of each
+    # other, so it stands up from the head as a low mound (some 45 mm wide and 25 mm high where it leaves the head) up to the tie
+    mound = lambda f: 0.0300 - 0.0140 * _smooth(0.012, ROOT, f * (ROOT + 0.002)) ** 0.8
+    rings = tube(0.0, ROOT + 0.002, 10, mound, lambda f: (0.42 + 0.44 * f * f) * mound(f), R_PLAIN, sides=14, u=(0.0, 0.45))   # flat at the head: it has to fit the opening of a cap
     c, t, no = line.at(ROOT + 0.002); m.cap(rings[-1], c, t, R_PLAIN, 0.45)
     # the hair ties: short sleeves, their rims pulled into the hair, closed at both ends
-    for l, r in ((ROOT, 0.0128), (lb, W1 * 0.86)):
-        prof = ((-0.5, 0.84), (-0.34, 1.07), (0.34, 1.07), (0.5, 0.84))
+    for l, r in ((ROOT, 0.0168), (lb, W1 * 0.90)):
+        prof = ((-0.5, 0.88), (-0.30, 1.08), (0.30, 1.08), (0.5, 0.88))
         rings = []
         for k, (o, sc) in enumerate(prof):
             c, t, no = line.at(l + o * TIE)
@@ -150,7 +152,7 @@ def braid_mesh():
 
     def strand_pos(l, phi):
         c, t, no = line.at(l); w = width(l)
-        env = _smooth(la - 0.001, la + 0.012, l) * _smooth(lb + 0.001, lb - 0.010, l)   # the strands come out of the ties
+        env = _smooth(la - 0.002, la + 0.006, l) * _smooth(lb + 0.001, lb - 0.010, l)   # the strands come out of the ties: full width right below the upper one
         return c + X * (0.50 * w * env * math.sin(phi)) + no * (-0.30 * w * env * math.sin(2 * phi)), no, w
 
     for i in range(3):

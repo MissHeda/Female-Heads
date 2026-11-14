@@ -27,7 +27,7 @@ TFTW = "\\A3_female_heads\\female_head_ICEMAN\\female_01\\"
 
 # hair / eye colours (sRGB 0..1)
 BLACK, DARKBROWN, CHESTNUT, AUBURN = (0.040, 0.036, 0.038), (0.105, 0.062, 0.042), (0.20, 0.105, 0.060), (0.27, 0.085, 0.045)
-LIGHTBROWN, GINGER, BLONDE, PLATINUM = (0.34, 0.225, 0.14), (0.44, 0.215, 0.105), (0.62, 0.50, 0.33), (0.76, 0.67, 0.50)
+LIGHTBROWN, GINGER, BLONDE, PLATINUM = (0.34, 0.225, 0.14), (0.44, 0.215, 0.105), (0.62, 0.50, 0.33), (0.60, 0.52, 0.375)
 # eye colours: (tint, brightness) of the iris against the grey of the photographed one, which keeps its light and
 # dark. The game shows colours far more saturated than the texture has them: the clearly blue eyes of the
 # Timberwolf face are (0.95, 1.01, 1.08) on this scale, her brown ones (1.15, 0.94, 0.89).
@@ -35,7 +35,7 @@ E_BLUE, E_GREY, E_GREEN = ((0.93, 1.00, 1.09), 1.00), ((0.97, 1.00, 1.03), 1.00)
 E_HAZEL, E_BROWN, E_DARK = ((1.09, 1.00, 0.86), 0.88), ((1.15, 0.95, 0.87), 0.78), ((1.11, 0.97, 0.89), 0.52)
 # skin tones: mean cheek colour the face is brought to
 S_PALE, S_FAIR, S_BASE, S_TAN, S_OLIVE, S_BROWN, S_DARK = (0.665, 0.505, 0.460), (0.625, 0.455, 0.405), (0.585, 0.420, 0.370), \
-    (0.515, 0.350, 0.280), (0.490, 0.345, 0.265), (0.365, 0.235, 0.180), (0.300, 0.190, 0.142)
+    (0.515, 0.350, 0.280), (0.490, 0.345, 0.265), (0.365, 0.235, 0.180), (0.285, 0.192, 0.152)
 
 # shape: millimetres (jaw, chin, chin_fwd, nose_len, nose_up, cheek, lips, brow) and a relative nose width
 CHARS = [
@@ -81,8 +81,9 @@ def masks(base):
 
 
 # ------------------------------------------------------------------ face paint
+LUMW = np.array([0.30, 0.59, 0.11])
 def paint_layer(m):
-    """The Timberwolf face paint taken off their painted face: -> (how thick it lies 0..1, its colour).
+    """The Timberwolf face paint taken off their painted face: -> (how thick it lies 0..1, its colour, brush marks).
     Their painted texture is their skin with paint over it: painted = skin * (1 - a) + paint * a. The paint is a
     mix of two colours (olive and black), so for every texel a and the mix can be solved from the three colour
     channels. Laid over another skin with the same a, the result is their paint exactly as it is: thick where it
@@ -102,7 +103,7 @@ def paint_layer(m):
     paint = black + (b / np.maximum(a, 1e-3))[..., None] * v
     rest = d - (a[..., None] * u + b[..., None] * v)                   # brush marks the two colours do not explain
     a = a * smooth(0.04, 0.10, a) * on                                 # no haze where there is no paint
-    paint = np.clip(paint + rest * smooth(0.3, 0.7, a)[..., None], 0, 1)
+    rest = rest * smooth(0.3, 0.7, a)[..., None]
     print(f"face paint: olive {olive.round(3)}, black {black.round(3)}, not explained {float(np.abs(rest[strong]).mean()):.3f}")
     # Two changes to their pattern. The upper forehead is nearly bare on one side and dabbed thinly on the other,
     # which reads as a pale mottled patch: it is covered with olive, as strokes running the way theirs do. And the ears carry a lot of paint: nearly half of it comes off.
@@ -113,15 +114,18 @@ def paint_layer(m):
     q = np.stack([pos @ across, (pos @ along) * 0.30, z * 0.5], -1)
     strokes = sine_noise(q, 330.0, 5, 10, (0.6, 1.6)) + 0.12 * sine_noise(pos, 700.0, 6, 8)
     zone = smooth(0.738, 0.750, y) * smooth(-0.040, -0.062, z) * smooth(0.078, 0.064, np.abs(x)) * m["cov"]
-    more = zone * smooth(-1.05, -0.35, strokes) * 0.92                 # most of it covered, a few gaps left
+    more = zone * smooth(-0.75, -0.05, strokes) * 0.88                 # some two thirds of it covered
     # their colour: the paint next to it carried on, olive where there is none near
     near = blurf(a, 14); cont = np.stack([blurf(paint[..., i] * a, 14) for i in range(3)], -1) / np.maximum(near, 1e-3)[..., None]
     colour = lerp(np.broadcast_to(olive_thick, paint.shape), cont, smooth(0.05, 0.25, near)) * (1 + 0.04 * sine_noise(q, 900.0, 7, 8))[..., None]
     paint = lerp(paint, np.clip(colour, 0, 1), np.maximum(more, np.clip((more - a) / np.maximum(more, 1e-3), 0, 1)) * (more > 0))   # over their pale dabs too
     a = np.maximum(a, more)
-    ear = np.zeros(a.shape); ear[:140, :230] = 1.0                    # the ears have their own corner of the texture
-    a = a * (1 - 0.45 * ear)
-    m["paint"] = (a, paint); return m["paint"]
+    rest = rest * (1 - more)[..., None]
+    a[:140, :230] = 0.0                                              # the ears (their own corner of the texture) stay bare
+    # It ends before the hair begins, with a ragged edge: paint right up to the hairline all the way round looks
+    # like a mask.
+    a = a * smooth(0.30, 0.05, blurf(m["hair"], 16) + 0.09 * sine_noise(pos, 260.0, 9, 8, (0.6, 1.6)))
+    m["paint"] = (a, paint, rest); return m["paint"]
 
 
 # ------------------------------------------------------------------ hair towards the braid
@@ -173,10 +177,15 @@ def hair_to_braid(m, hlum):
     spot = smooth(R1 + 0.045, R1 + 0.030, np.hypot(s, t - tb)) * head                 # the repaired spot shows even where nothing moves
     w = np.maximum(w, spot)
     res = hlum * (1 - w) + sample(F2, s, t + (tb - tr) * k) * w
-    # 3. The hair around the bun was photographed in its shadow: bring it to the brightness of the hair above
-    ref = head & (m["hair"] > 0.9) & (np.abs(s) < 0.05) & (t > tr - 0.075) & (t < tr - 0.035)
-    level = float(np.median(hlum[ref])); sigma = float((hlum - blurf(hlum, 3))[ref].std()) / level
-    res = res * (1 + (np.clip(level / np.maximum(blurf(res, 22), 1e-3), 0.6, 2.5) - 1) * 0.8 * smooth(0.0, 0.25, k))
+    # 3. The hair around the bun was photographed in its shadow and lost detail by being moved: it gets the
+    # brightness and the contrast between strands of the untouched hair above and beside it, fading in slowly, so
+    # no line shows on the head where the changed hair begins.
+    ref = head & (m["hair"] > 0.9) & (k <= 0) & (np.abs(th) < 1.7) & (t < tr + 0.03)
+    low = np.maximum(blurf(res, 22), 1e-3); dev = res - low; spread = np.sqrt(np.maximum(blurf(dev ** 2, 22), 1e-8))
+    level = float(low[ref].mean()); sigma = float((hlum - blurf(hlum, 3))[ref].std()) / level
+    same = level + dev * np.clip(float(spread[ref].mean()) / spread, 0.6, 2.5)
+    wz = smooth(0.0, 0.45, k)
+    res = np.maximum(res * (1 - wz) + same * wz, 0.0)
     # 4. Fine strands are drawn over the photo hair where it does not run to the braid after all that:
     #   - right around the start of the braid, as a part of the picture only and in patches. Wide rays all the way
     #     round look like a star, which hair never does;
@@ -268,8 +277,10 @@ def face_texture(ch, tactical=False, braid=False):
     edge = m["cov"] & (y < 0.575) & (skin > 0.9) & (hair < 0.05)
     neck = out[edge].mean(0)
     if tactical:                                         # the Timberwolf face paint, laid over the new face
-        a, paint = paint_layer(m)
-        out = lerp(out, paint, a * (1 - hair))
+        a, paint, rest = paint_layer(m)
+        # the brush marks are mostly their skin shining through thin paint: as light as the skin here is
+        tone = np.clip((out @ LUMW) / np.maximum(m["orig"] @ LUMW, 1e-3), 0.2, 1.1)
+        out = lerp(out, np.clip(paint + rest * tone[..., None], 0, 1), a * (1 - hair))
     return np.clip(out, 0, 1), (neck, g)
 
 
@@ -389,8 +400,9 @@ def write_config():
         for v, tac in (("", False), ("", True), ("_braid", False), ("_braid", True)):
             cls = f'mhfh_{c["id"]}{v}{"_tac" if tac else ""}'
             label = ", ".join(([] if not v else ["Braid"]) + ([] if not tac else ["Tactical"]))
-            # the face worn instead while the headgear leaves no room for the braid (addons/hair)
-            bun = f'            mhfh_bunFace = "mhfh_{c["id"]}{"_tac" if tac else ""}";\n' if v else ""
+            # the same character with the other hair, for the change with the headgear (addons/hair)
+            bun = (f'            mhfh_bunFace = "mhfh_{c["id"]}{"_tac" if tac else ""}";\n' if v else
+                   f'            mhfh_braidFace = "mhfh_{c["id"]}_braid{"_tac" if tac else ""}";\n')
             faces += f'''        class {cls}: B_female_bun_01 {{
             author = "Miss Heda";
             displayName = "{c["name"]}{" (" + label + ")" if label else ""}";

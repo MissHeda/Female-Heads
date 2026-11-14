@@ -23,17 +23,26 @@ Every character comes with a bun or a braid, each also as a "(Tactical)" variant
 
 Pick them in the Arsenal (Face) or with `player setFace "mhfh_walsh"` / `"mhfh_walsh_tac"`.
 
-## Braid and helmets
+## Braid and headgear
 
 The braid starts high on the back of the head and comes out through the opening of a baseball cap. Under a
-helmet there is no room for it: a character with a braid wears her bun while she has headgear on and gets the
-braid back when it comes off (`addons/hair`).
+helmet there is no room for it. So the hair follows the headgear (`addons/hair`): every character exists with a
+bun and with a braid, and which one she shows is decided by settings.
 
-- **Settings** (CBA, "MH Female Heads"): "Bun under helmets" switches this on or off; "Headgear worn with the
-  braid" lists the headgear classes the braid fits under (default `H_Cap_red, H_Cap_headphones`, which covers
-  all caps; classes that inherit from a listed one count as well).
-- **Other mods:** headgear can say so itself with `mhfh_keepBraid = 1;` in its `CfgWeapons` class. A face of
-  another mod takes part with `mhfh_bunFace = "<face without the braid>";` in its `CfgFaces` class.
+**Settings** (CBA, "MH Female Heads"). They are the player's own settings; a server or mission can force them
+like any CBA setting.
+
+| Setting | Default | |
+|---|---|---|
+| Hair follows the headgear | on | Off: always the hair of the face that was picked |
+| Without headgear | As picked | As picked / Braid / Bun |
+| All other headgear | Bun | For headgear that is in neither list |
+| Headgear worn with the braid | `H_Cap_red, H_Cap_headphones` | Class names; classes inheriting from them count too. Covers all caps |
+| Headgear worn with the bun | empty | Class names; goes before the braid list |
+
+**Other mods:** headgear can ask for the braid itself with `mhfh_keepBraid = 1;` in its `CfgWeapons` class.
+Faces that come with a bun and with a braid take part when they name each other in `CfgFaces`:
+`mhfh_bunFace = "<bun face>";` in the braid face, `mhfh_braidFace = "<braid face>";` in the bun face.
 
 ## How they are made
 
