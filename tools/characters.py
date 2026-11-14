@@ -2,14 +2,14 @@
 
 Every character is that head with a slightly different face shape and a face texture derived from one of the two
 Timberwolf faces: other skin tone, hair, brow and eye colour, optional freckles, plus a "Tactical" variant with
-their face paint. Reads the reference data written by tools/ref_tftw.py and writes
+camouflage face paint. Reads the reference data written by tools/ref_tftw.py and writes
   addons/heads/data/mhfh_<id>[_braid][_tac]_co.paa, mhfh_<id>_hl_co.paa   textures (face, arms and legs)
   addons/heads/models/mhfh_<id>[_braid].p3d                                the reshaped model (all LODs)
   addons/heads/config.cpp, model.cfg                                       faces and heads
 The mod needs the Timberwolf mod loaded: normal/ambient maps and base classes come from it.
 usage (repo root): python -I tools/characters.py [--preview]
 """
-import os, subprocess, sys
+import math, os, subprocess, sys
 import numpy as np
 from PIL import Image
 
@@ -40,18 +40,25 @@ S_PALE, S_FAIR, S_BASE, S_TAN, S_OLIVE, S_BROWN, S_DARK = (0.665, 0.505, 0.460),
 # shape: millimetres (jaw, chin, chin_fwd, nose_len, nose_up, cheek, lips, brow) and a relative nose width
 CHARS = [
     dict(id="kovacs", name="Kovacs", base=1, hair=BLACK, skin=S_PALE, eyes=E_GREY, freckles=0.0,
+         paint=dict(kind="stripes", seed=11, angle=62, base=(0.33, 0.37, 0.25), dark=(0.085, 0.095, 0.085)),
          shape=dict(jaw=-1.8, chin=1.2, chin_fwd=0.6, nose_w=-0.07, nose_len=0.8, nose_up=0.4, cheek=1.2, lips=0.5, brow=0.0)),
     dict(id="reyes", name="Reyes", base=1, hair=DARKBROWN, skin=S_TAN, eyes=E_BROWN, freckles=0.0,
+         paint=dict(kind="blotch", seed=23, base=(0.33, 0.37, 0.25), dark=(0.17, 0.22, 0.14), third=(0.34, 0.27, 0.18)),
          shape=dict(jaw=1.2, chin=-0.8, chin_fwd=0.0, nose_w=0.06, nose_len=-0.4, nose_up=0.0, cheek=1.6, lips=1.2, brow=0.4)),
     dict(id="okoye", name="Okoye", base=1, hair=BLACK, skin=S_DARK, eyes=E_DARK, freckles=0.0,
+         paint=dict(kind="blotch", seed=37, base=(0.33, 0.37, 0.25), dark=(0.17, 0.22, 0.14), third=(0.47, 0.42, 0.30)),
          shape=dict(jaw=0.6, chin=0.4, chin_fwd=0.8, nose_w=0.12, nose_len=-1.0, nose_up=-0.2, cheek=1.0, lips=2.0, brow=0.6)),
     dict(id="walsh", name="Walsh", base=1, hair=AUBURN, skin=S_FAIR, eyes=E_GREEN, freckles=0.8,
+         paint=dict(kind="stripes", seed=41, angle=-55, pitch=0.060, base=(0.17, 0.22, 0.14), dark=(0.085, 0.095, 0.085), third=(0.33, 0.37, 0.25)),
          shape=dict(jaw=-0.8, chin=-1.0, chin_fwd=-0.4, nose_w=-0.04, nose_len=0.2, nose_up=0.8, cheek=0.2, lips=-0.3, brow=-0.3)),
     dict(id="lindqvist", name="Lindqvist", base=3, hair=PLATINUM, skin=S_PALE, eyes=E_BLUE, freckles=0.0,
+         paint=dict(kind="blotch", seed=53, base=(0.33, 0.37, 0.25), dark=(0.085, 0.095, 0.085), third=(0.34, 0.27, 0.18)),
          shape=dict(jaw=-1.4, chin=0.6, chin_fwd=0.2, nose_w=-0.08, nose_len=0.6, nose_up=0.6, cheek=1.4, lips=0.2, brow=0.0)),
     dict(id="fraser", name="Fraser", base=3, hair=GINGER, skin=S_FAIR, eyes=E_GREEN, freckles=1.0,
+         paint=dict(kind="stripes", seed=67, angle=80, base=(0.33, 0.37, 0.25), dark=(0.085, 0.095, 0.085), third=(0.34, 0.27, 0.18)),
          shape=dict(jaw=0.8, chin=-0.6, chin_fwd=0.0, nose_w=0.02, nose_len=-0.2, nose_up=0.6, cheek=-0.4, lips=0.8, brow=-0.2)),
     dict(id="novak", name="Novak", base=3, hair=LIGHTBROWN, skin=S_BASE, eyes=E_HAZEL, freckles=0.0,
+         paint=dict(kind="blotch", seed=71, base=(0.34, 0.27, 0.18), dark=(0.17, 0.22, 0.14), third=(0.33, 0.37, 0.25)),
          shape=dict(jaw=1.6, chin=1.4, chin_fwd=0.6, nose_w=0.04, nose_len=0.4, nose_up=-0.4, cheek=0.6, lips=-0.2, brow=0.5)),
 ]
 
@@ -75,9 +82,97 @@ _M = {}
 def masks(base):
     if base not in _M:
         m = tftw_masks.build(f"face_0{base}")
-        m["tac"] = tftw_masks.load(f"face_0{base + 1}")
         _M[base] = m
     return _M[base]
+
+
+# ------------------------------------------------------------------ face paint
+# colours of the Timberwolf paint (olive, black), which is tested in game, and a few more on the same level
+P_OLIVE, P_GREEN, P_BLACK, P_LOAM, P_SAND = (0.33, 0.37, 0.25), (0.17, 0.22, 0.14), (0.085, 0.095, 0.085), (0.34, 0.27, 0.18), (0.47, 0.42, 0.30)
+LUMW = np.array([0.30, 0.59, 0.11])
+
+
+def face_paint(ch, m, out):
+    """camouflage paint over the finished face: the whole face, ears and neck are covered (no bare islands), in two
+    or three colours as stripes or blotches. The pattern lives in space, not in the texture, so it has no seams."""
+    p = ch["paint"]; seed = p["seed"]; pos = m["pos"]; y = pos[..., 1]
+    # what the skin shows under the paint: pores, creases and the shading baked into the photo
+    lum = out @ LUMW; soft = np.maximum(blur(lum, 10), 1e-3)
+    face = (m["skin"] > 0.9) & (m["hair"] < 0.05) & m["cov"]
+    detail = np.clip(lum / soft, 0.55, 1.25) ** 0.9
+    shade = np.clip(soft / float(np.median(soft[face])), 0.5, 1.15) ** 0.55
+    # the pattern: positions pushed around a little so nothing is straight
+    wp = pos + 0.011 * np.stack([sine_noise(pos, 55.0, seed + k, 8, (0.6, 1.6)) for k in (1, 2, 3)], -1)
+    rough = 0.04 * sine_noise(pos, 1300.0, seed + 20, 10) + 0.12 * sine_noise(pos, 420.0, seed + 21, 8)   # smeared edges
+    if p["kind"] == "stripes":
+        a = math.radians(p["angle"]); d = np.array([math.cos(a), math.sin(a), 0.35 * math.cos(a)])
+        f = np.sin((wp @ d) * (2 * math.pi / p.get("pitch", 0.050)) + 1.2 * sine_noise(pos, 40.0, seed + 4, 6)) \
+            + 0.85 * sine_noise(wp, 70.0, seed + 5, 8, (0.6, 1.6))                                # width varies, stripes break
+        mdark = smooth(0.22, 0.46, f + rough)
+        g = sine_noise(wp, 85.0, seed + 6, 10, (0.6, 1.6))
+    else:
+        f = sine_noise(wp, 80.0, seed + 5, 10, (0.6, 1.6)); g = sine_noise(wp, 80.0, seed + 6, 10, (0.6, 1.6))
+        mdark = smooth(0.20, 0.44, f + rough)
+    col = np.broadcast_to(np.array(p["base"]), out.shape).copy()
+    if p.get("third"): col = lerp(col, np.broadcast_to(np.array(p["third"]), out.shape), smooth(0.38, 0.62, g + rough))
+    col = lerp(col, np.broadcast_to(np.array(p["dark"]), out.shape), mdark)
+    col = col * (detail * shade)[..., None]
+    # how thick it sits: never quite opaque, thinner here and there, less on the lips, none on lashes, eyes, hair
+    thick = 0.86 + 0.10 * np.tanh(sine_noise(pos, 300.0, seed + 30, 8))
+    lower = smooth(0.548, 0.585, y + 0.010 * sine_noise(pos, 250.0, seed + 31, 6))                # ragged end at the collar
+    c = m["skin"] * (1 - m["hair"]) * (1 - m["eye"]) * (1 - m["mouth"]) * lower * thick * (1 - 0.55 * m["lips"]) * (1 - 0.7 * np.clip(m["lashes"], 0, 1))
+    return lerp(out, col, np.clip(c, 0, 1))
+
+
+# ------------------------------------------------------------------ hair towards the braid
+BUN_AT, BRAID_AT = (0.665, 0.080), (0.727, 0.078)       # (height, depth): where the bun sat, where the braid starts
+
+
+def hair_to_braid(m, hlum):
+    """The photographed hair runs to the bun. For the braid it has to run to the start of the braid, 6 cm higher.
+    The hair is laid out flat (around the head, down the head) and changed there:
+      1. the spot the bun covered (photographed dark, with a rim) is filled with the hair around it, mirrored at
+         its edge, so the strands go on to the middle; below the middle the hair from above is used upside down,
+         because there is next to no hair under the bun that could run up to it;
+      2. every texel takes the hair that lies a bit further down: by the full distance at the start of the braid,
+         by nothing at the hairline. So the hair above still comes down to the braid and the hair below runs up."""
+    pos, cov = m["pos"], m["cov"]; x, y, z = pos[..., 0], pos[..., 1], pos[..., 2]
+    RHO, CY, R1 = 0.085, 0.700, 0.047
+    th = np.arctan2(x, z); s = th * RHO; t = np.arctan2(np.hypot(x, z), y - CY) * RHO
+    tb = math.atan2(BUN_AT[1], BUN_AT[0] - CY) * RHO; tr = math.atan2(BRAID_AT[1], BRAID_AT[0] - CY) * RHO
+    head = cov & ~m["bun"] & (np.abs(th) < 2.0)
+    k = np.clip(1 - (s / 0.11) ** 2 - ((t - tr) / np.where(t < tr, 0.085, 0.125)) ** 2, 0, 1) ** 2 * head
+    G = 0.00025; S0 = -0.18; W, H = int(0.36 / G), int(0.27 / G)
+    src = head & (m["hair"] > 0.5)
+    gi = np.clip(((s - S0) / G).astype(int), 0, W - 1); gj = np.clip((t / G).astype(int), 0, H - 1)
+    A = np.zeros((H, W)); K = np.zeros((H, W)); A[gj[src], gi[src]] = hlum[src]; K[gj[src], gi[src]] = 1
+    flat = A.copy(); done = K > 0
+    for rad in (1, 2, 4, 8, 16, 32):                     # cells no texel fell into, and a rim beyond the hairline
+        kk = blur(K, rad); take = ~done & (kk > 0.03)
+        flat[take] = (blur(A, rad) / np.maximum(kk, 1e-3))[take]; done |= take
+
+    def sample(F, fs, ft):                               # fs, ft in metres
+        fi = (fs - S0) / G - 0.5; fj = ft / G - 0.5
+        i0 = np.clip(np.floor(fi).astype(int), 0, W - 2); j0 = np.clip(np.floor(fj).astype(int), 0, H - 2)
+        a = np.clip(fi - i0, 0, 1); b = np.clip(fj - j0, 0, 1)
+        return F[j0, i0] * (1 - a) * (1 - b) + F[j0, i0 + 1] * a * (1 - b) + F[j0 + 1, i0] * (1 - a) * b + F[j0 + 1, i0 + 1] * a * b
+
+    # 1. the spot of the bun
+    gs = S0 + (np.arange(W) + 0.5) * G; gt = (np.arange(H) + 0.5) * G
+    ds, dt = np.meshgrid(gs, gt - tb); r = np.maximum(np.hypot(ds, dt), 1e-5)
+    inside = r < R1 + 0.003
+    f = np.where(inside, (2 * (R1 + 0.003) - r) / r, 1.0)
+    F1 = np.where(inside, sample(flat, ds * f, tb + dt * f), flat)                    # mirrored at the edge
+    up = sample(F1, ds, tb - np.abs(dt))                                               # the upper half, upside down
+    F2 = F1 + (up - F1) * (dt > 0) * smooth(R1 + 0.018, R1 + 0.005, r)
+    ring = (r > R1 + 0.015) & (r < R1 + 0.045) & (dt < 0) & (np.abs(ds) < 0.05)
+    level = float(np.median(F2[ring]))                                                 # no dark halo where the bun sat
+    F2 = F2 * (1 + (np.clip(level / np.maximum(blur(F2, 28), 1e-3), 0.5, 3.0) - 1) * smooth(R1 + 0.040, R1 + 0.012, r))
+    # 2. everything a bit further up
+    w = smooth(0.0, 0.03, k) * head
+    spot = smooth(R1 + 0.045, R1 + 0.030, np.hypot(s, t - tb)) * head                 # the repaired spot shows even where nothing moves
+    w = np.maximum(w, spot)
+    return hlum * (1 - w) + sample(F2, s, t + (tb - tr) * k) * w
 
 
 def face_texture(ch, tactical=False, braid=False):
@@ -112,9 +207,7 @@ def face_texture(ch, tactical=False, braid=False):
         rel = np.clip(rel, floor, top) * (1 - light) + soft * light
         warm = 1 + light * np.array([-0.10, 0.0, 0.20])
         return np.minimum(ht * rel[..., None] ** ((0.80 - 0.30 * light) * warm), 0.94)
-    if braid:                                            # the hair the bun covered was photographed in its shadow
-        under = smooth(0.050, 0.070, z) * smooth(0.055, 0.035, ax) * smooth(0.600, 0.630, y) * smooth(0.735, 0.710, y) * (1 - m["bun"])
-        hlum = hlum * (1 - under) + np.maximum(hlum, hmean * (0.55 + 0.35 * sine_noise(pos, 900.0, 4, 8).clip(-1, 1) * 0.5 + 0.2)) * under
+    if braid: hlum = hair_to_braid(m, hlum)              # the hair runs to the start of the braid, not to the bun
     out = lerp(out, np.clip(recolour(hlum), 0, 1), hair)
     if braid:                                            # the braid's hair goes where the bun's texture was
         strips, tie = braidlib.textures()
@@ -137,16 +230,7 @@ def face_texture(ch, tactical=False, braid=False):
     # the skin at the lower edge, where the neck meets the body: the arms get this tone
     edge = m["cov"] & (y < 0.575) & (skin > 0.9) & (hair < 0.05)
     neck = out[edge].mean(0)
-    if tactical:                                         # their face paint, laid over the new face
-        tac, orig = m["tac"], m["orig"]
-        diff = np.abs(tac - orig).max(-1)
-        # where their painted face still looks like skin there is no paint (it would bring their skin tone along)
-        bare = smooth(0.22, 0.32, tac @ np.array([0.30, 0.59, 0.11])) * smooth(0.07, 0.11, (tac[..., 0] - tac[..., 2]) / np.maximum(tac.sum(-1), 1e-3))
-        # thin paint is a mix of paint and their skin: take the skin out again and lay it over ours just as thin
-        thick = np.clip(diff / 0.30, 0, 1)
-        pure = np.clip(orig + (tac - orig) / np.maximum(thick, 0.3)[..., None], 0, 1)
-        a = blur(thick * smooth(0.035, 0.11, diff) * (1 - bare), 1.0) * (1 - m["eye"]) * (1 - m["mouth"]) * skin * (1 - hair)
-        out = lerp(out, pure * (1 - 0.12 * dark), a)
+    if tactical: out = face_paint(ch, m, out)
     return np.clip(out, 0, 1), (neck, g)
 
 

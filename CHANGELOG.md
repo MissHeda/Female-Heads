@@ -9,7 +9,9 @@
 - No more dark streaks on the neck: repaired shadow volume.
 - Arms and legs have the tone of the neck.
 - Eyes keep the brightness of the photographed ones, no more glowing iris.
-- Blonde hair without black strands; face paint no longer touches the hair and sits properly on dark skin.
+- Blonde hair without black strands.
+- New face paint for the Tactical variants: an own pattern per character that covers the whole face.
+- With the braid the hair on the head runs to the start of the braid, not to where the bun was.
 - Haddad removed.
 
 ## 0.1.0
