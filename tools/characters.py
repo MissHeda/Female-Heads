@@ -104,20 +104,20 @@ def paint_layer(m):
     a = a * smooth(0.04, 0.10, a) * on                                 # no haze where there is no paint
     paint = np.clip(paint + rest * smooth(0.3, 0.7, a)[..., None], 0, 1)
     print(f"face paint: olive {olive.round(3)}, black {black.round(3)}, not explained {float(np.abs(rest[strong]).mean()):.3f}")
-    # Two changes to their pattern. The upper forehead is nearly bare on one side: more olive there, as strokes
-    # running the way theirs do. And the ears carry a lot of paint: nearly half of it comes off.
+    # Two changes to their pattern. The upper forehead is nearly bare on one side and dabbed thinly on the other,
+    # which reads as a pale mottled patch: it is covered with olive, as strokes running the way theirs do. And the ears carry a lot of paint: nearly half of it comes off.
     pos = m["pos"]; x, y, z = pos[..., 0], pos[..., 1], pos[..., 2]
     thick = (a > 0.85) & m["cov"]; l = paint @ np.array([0.30, 0.59, 0.11])
     olive_thick = np.median(paint[thick & (l > np.percentile(l[thick], 55))], 0)
     across = np.array([0.90, -0.44, 0.0]); along = np.array([0.44, 0.90, 0.0])
     q = np.stack([pos @ across, (pos @ along) * 0.30, z * 0.5], -1)
     strokes = sine_noise(q, 330.0, 5, 10, (0.6, 1.6)) + 0.12 * sine_noise(pos, 700.0, 6, 8)
-    zone = smooth(0.744, 0.756, y) * smooth(-0.055, -0.075, z) * smooth(0.070, 0.058, np.abs(x)) * m["cov"]
-    more = zone * smooth(-0.45, 0.05, strokes) * 0.90
+    zone = smooth(0.738, 0.750, y) * smooth(-0.040, -0.062, z) * smooth(0.078, 0.064, np.abs(x)) * m["cov"]
+    more = zone * smooth(-1.05, -0.35, strokes) * 0.92                 # most of it covered, a few gaps left
     # their colour: the paint next to it carried on, olive where there is none near
     near = blurf(a, 14); cont = np.stack([blurf(paint[..., i] * a, 14) for i in range(3)], -1) / np.maximum(near, 1e-3)[..., None]
     colour = lerp(np.broadcast_to(olive_thick, paint.shape), cont, smooth(0.05, 0.25, near)) * (1 + 0.04 * sine_noise(q, 900.0, 7, 8))[..., None]
-    paint = lerp(paint, np.clip(colour, 0, 1), np.clip((more - a) / np.maximum(more, 1e-3), 0, 1))
+    paint = lerp(paint, np.clip(colour, 0, 1), np.maximum(more, np.clip((more - a) / np.maximum(more, 1e-3), 0, 1)) * (more > 0))   # over their pale dabs too
     a = np.maximum(a, more)
     ear = np.zeros(a.shape); ear[:140, :230] = 1.0                    # the ears have their own corner of the texture
     a = a * (1 - 0.45 * ear)
@@ -231,19 +231,26 @@ def face_texture(ch, tactical=False, braid=False):
     hl = hlum[hair > 0.9]; hmean = float(np.percentile(hl, 85 - 40 * light))
     # (the photo is of dark hair: its darkest strands stay dark in any colour, so light hair keeps less of them)
     # and those it keeps fade in softly and turn warmer instead of grey)
-    def recolour(l, floor=0.15 + 0.42 * light):
+    # Black and nearly black hair would be one black area: a multiple of a colour that dark stays dark. Its lighter
+    # strands get the sheen such hair has, so its strands and the shape of bun and braid can be seen.
+    deep = float(np.clip((0.20 - ht.max()) / 0.12, 0, 1))
+    sheen = 0.13 * (0.5 * ht / ht.max() + 0.5) * deep
+    # (strand: how light a texel is against the hair around it. The back of the head is dark as a whole in the
+    # photo, so there the sheen goes by that and not by the brightness itself.)
+    def recolour(l, floor=0.15 + 0.42 * light, strand=None):
         rel = l / max(hmean, 1e-3); top = 1.6 - 0.45 * light
         soft = np.where(rel < 1, floor + (1 - floor) * np.clip(rel, 0, 1) ** 0.8, np.minimum(rel, top))
         rel = np.clip(rel, floor, top) * (1 - light) + soft * light
         warm = 1 + light * np.array([-0.10, 0.0, 0.20])
-        return np.minimum(ht * rel[..., None] ** ((0.80 - 0.30 * light) * warm), 0.94)
+        shine = np.clip(rel - 0.55, 0, 1.3) ** 1.3 if strand is None else 0.9 * np.clip(strand - 0.80, 0, 1.4) ** 1.2
+        return np.minimum(ht * rel[..., None] ** ((0.80 - 0.30 * light) * warm), 0.94) + sheen * shine[..., None]
     if braid: hlum = hair_to_braid(m, hlum)              # the hair runs to the start of the braid, not to the bun
-    out = lerp(out, np.clip(recolour(hlum), 0, 1), hair)
+    out = lerp(out, np.clip(recolour(hlum, strand=hlum / np.maximum(blurf(hlum, 14), 0.015)), 0, 1), hair)
     if braid:                                            # the braid's hair goes where the bun's texture was
         strips, tie = braidlib.textures()
         for (x0, x1, y0, y1), row in strips:
             # on dark hair only the highlights of the head reach the hair colour: the braid is as dark as the rest
-            c = np.clip(recolour(row * hmean * (0.62 + 0.38 * light), floor=0.2), 0, 1)
+            c = np.clip(recolour(row * hmean * min(1.0, 0.62 + 0.38 * light + 0.30 * deep), floor=0.2), 0, 1)
             out[y0:y1, x0:x1] = c
             out[y0 - 3:y0, x0:x1] = c[-3:]; out[y1:y1 + 3, x0:x1] = c[:3]          # the strip closes around the strand
             out[y0 - 3:y1 + 3, x0 - 3:x0] = out[y0 - 3:y1 + 3, x0:x0 + 1]; out[y0 - 3:y1 + 3, x1:x1 + 3] = out[y0 - 3:y1 + 3, x1 - 1:x1]
