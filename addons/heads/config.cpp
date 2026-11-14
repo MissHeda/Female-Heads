@@ -49,9 +49,6 @@ class CfgHeads {
     class MHF_Female_Fraser_Braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_fraser_braid.p3d";
     };
-    class MHF_Female_Fraser_Ponytail: bun_female_bun_01 {
-        model = "\z\mhfh\addons\heads\models\mhfh_fraser_ponytail.p3d";
-    };
     class MHF_Female_Fraser_BraidedBun: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_fraser_braidedbun.p3d";
     };
@@ -453,7 +450,7 @@ class CfgFaces {
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             mhfh_braidFace = "MHF_Female_Fraser_Braid";
-            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun", "braid", "MHF_Female_Fraser_Braid", "ponytail", "MHF_Female_Fraser_Ponytail", "braidedbun", "MHF_Female_Fraser_BraidedBun"};
+            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun", "braid", "MHF_Female_Fraser_Braid", "braidedbun", "MHF_Female_Fraser_BraidedBun"};
             mhfh_camoFace = "MHF_Female_Fraser_Bun_Tactical";
         };
         class MHF_Female_Fraser_Bun_Tactical: B_female_bun_01 {
@@ -470,7 +467,7 @@ class CfgFaces {
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             mhfh_braidFace = "MHF_Female_Fraser_Braid_Tactical";
-            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun_Tactical", "braid", "MHF_Female_Fraser_Braid_Tactical", "ponytail", "MHF_Female_Fraser_Ponytail_Tactical", "braidedbun", "MHF_Female_Fraser_BraidedBun_Tactical"};
+            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun_Tactical", "braid", "MHF_Female_Fraser_Braid_Tactical", "braidedbun", "MHF_Female_Fraser_BraidedBun_Tactical"};
             mhfh_plainFace = "MHF_Female_Fraser_Bun";
         };
         class MHF_Female_Fraser_Braid: B_female_bun_01 {
@@ -487,7 +484,7 @@ class CfgFaces {
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             mhfh_bunFace = "MHF_Female_Fraser_Bun";
-            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun", "braid", "MHF_Female_Fraser_Braid", "ponytail", "MHF_Female_Fraser_Ponytail", "braidedbun", "MHF_Female_Fraser_BraidedBun"};
+            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun", "braid", "MHF_Female_Fraser_Braid", "braidedbun", "MHF_Female_Fraser_BraidedBun"};
             mhfh_camoFace = "MHF_Female_Fraser_Braid_Tactical";
         };
         class MHF_Female_Fraser_Braid_Tactical: B_female_bun_01 {
@@ -504,42 +501,8 @@ class CfgFaces {
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             mhfh_bunFace = "MHF_Female_Fraser_Bun_Tactical";
-            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun_Tactical", "braid", "MHF_Female_Fraser_Braid_Tactical", "ponytail", "MHF_Female_Fraser_Ponytail_Tactical", "braidedbun", "MHF_Female_Fraser_BraidedBun_Tactical"};
+            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun_Tactical", "braid", "MHF_Female_Fraser_Braid_Tactical", "braidedbun", "MHF_Female_Fraser_BraidedBun_Tactical"};
             mhfh_plainFace = "MHF_Female_Fraser_Braid";
-        };
-        class MHF_Female_Fraser_Ponytail: B_female_bun_01 {
-            author = "Miss Heda";
-            disabled = 0;
-            displayName = "Fraser (Ponytail)";
-            head = "MHF_Female_Fraser_Ponytail";
-            texture = "\z\mhfh\addons\heads\data\mhfh_fraser_ponytail_co.paa";
-            material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            textureHL = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
-            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
-            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "MHF_Female_Fraser_Bun";
-            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun", "braid", "MHF_Female_Fraser_Braid", "ponytail", "MHF_Female_Fraser_Ponytail", "braidedbun", "MHF_Female_Fraser_BraidedBun"};
-            mhfh_camoFace = "MHF_Female_Fraser_Ponytail_Tactical";
-        };
-        class MHF_Female_Fraser_Ponytail_Tactical: B_female_bun_01 {
-            author = "Miss Heda";
-            disabled = 0;
-            displayName = "Fraser (Ponytail, Tactical)";
-            head = "MHF_Female_Fraser_Ponytail";
-            texture = "\z\mhfh\addons\heads\data\mhfh_fraser_ponytail_tac_co.paa";
-            material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            textureHL = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
-            materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
-            materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "MHF_Female_Fraser_Bun_Tactical";
-            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun_Tactical", "braid", "MHF_Female_Fraser_Braid_Tactical", "ponytail", "MHF_Female_Fraser_Ponytail_Tactical", "braidedbun", "MHF_Female_Fraser_BraidedBun_Tactical"};
-            mhfh_plainFace = "MHF_Female_Fraser_Ponytail";
         };
         class MHF_Female_Fraser_BraidedBun: B_female_bun_01 {
             author = "Miss Heda";
@@ -555,7 +518,7 @@ class CfgFaces {
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             mhfh_braidFace = "MHF_Female_Fraser_Braid";
-            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun", "braid", "MHF_Female_Fraser_Braid", "ponytail", "MHF_Female_Fraser_Ponytail", "braidedbun", "MHF_Female_Fraser_BraidedBun"};
+            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun", "braid", "MHF_Female_Fraser_Braid", "braidedbun", "MHF_Female_Fraser_BraidedBun"};
             mhfh_camoFace = "MHF_Female_Fraser_BraidedBun_Tactical";
         };
         class MHF_Female_Fraser_BraidedBun_Tactical: B_female_bun_01 {
@@ -572,7 +535,7 @@ class CfgFaces {
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             mhfh_braidFace = "MHF_Female_Fraser_Braid_Tactical";
-            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun_Tactical", "braid", "MHF_Female_Fraser_Braid_Tactical", "ponytail", "MHF_Female_Fraser_Ponytail_Tactical", "braidedbun", "MHF_Female_Fraser_BraidedBun_Tactical"};
+            mhfh_hairStyles[] = {"bun", "MHF_Female_Fraser_Bun_Tactical", "braid", "MHF_Female_Fraser_Braid_Tactical", "braidedbun", "MHF_Female_Fraser_BraidedBun_Tactical"};
             mhfh_plainFace = "MHF_Female_Fraser_BraidedBun";
         };
         class MHF_Female_Novak_Bun: B_female_bun_01 {

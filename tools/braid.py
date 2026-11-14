@@ -1,9 +1,8 @@
-"""Hair worn instead of the Timberwolf bun: the parts of three styles that have depth.
+"""Hair worn instead of the Timberwolf bun: the parts of two styles that have depth.
 
   braid       a plaited braid from high on the back of the head, where the opening of a cap is, so it comes out
               through that opening and lies over the strap: gathered hair, a hair tie, three strands plaited around
               each other, a second hair tie and the loose end
-  ponytail    a low ponytail: the hair gathered at the nape, a hair tie on the head and the hair hanging loose
   braidedbun  a bun wound from a twisted rope of hair, a spiral rising to its middle
 
 Hair cannot move by itself in the game, so what hangs is shaped the way it would hang on someone standing
@@ -26,10 +25,6 @@ STYLES = {
     "braid": dict(path=[(0.727, 0.058), (0.726, 0.072), (0.722, 0.084), (0.712, 0.095), (0.696, 0.103), (0.670, 0.103), (0.640, 0.099),
                         (0.610, 0.098), (0.582, 0.101), (0.560, 0.107), (0.540, 0.114), (0.521, 0.120)],
                   root=0.0265, w0=0.0230, w1=0.0150),
-    # it ends above where the braid ends: it is thin there and lies closer to the back
-    "ponytail": dict(path=[(0.676, 0.046), (0.672, 0.060), (0.666, 0.073), (0.655, 0.084), (0.636, 0.091), (0.610, 0.094), (0.584, 0.100),
-                           (0.561, 0.108), (0.542, 0.116), (0.528, 0.122)],
-                     root=0.0260, w0=0.0, w1=0.0),
 }
 # where the buns sit: a point on the back of the head and the direction out of it (back and a little down)
 BUN_AT = np.array([0.0, 0.668, 0.064]); BUN_OUT = np.array([0.0, -0.42, 0.91]) / math.hypot(0.42, 0.91)
@@ -160,26 +155,11 @@ def mesh(style="braid"):
         # Gathered hair coming out of the head. All the hair of the head runs together here and lies on top of each
         # other, so it stands up from the head as a low mound (some 45 mm wide and 25 mm high where it leaves the
         # head) up to the tie. Flat at the head: it has to fit the opening of a cap.
-        # (the ponytail has no cap to fit through: its mound is as high as it is wide)
-        flat = 0.42 if style == "braid" else 0.84
+        flat = 0.42
         mound = lambda f: 0.0300 - 0.0140 * _smooth(0.012, root, f * (root + 0.002)) ** 0.8
         rings = tube(0.0, root + 0.002, 10, mound, lambda f: (flat + (0.86 - flat) * f * f) * mound(f), R_PLAIN, sides=14, u=(0.0, 0.45))
         c, t, no = line.at(root + 0.002); m.cap(rings[-1], c, t, R_PLAIN, 0.45)
         tie(root, 0.0168)
-
-    if style == "ponytail":
-        # the loose hair below the tie: a flat bundle that spreads a little, then thins out to its end
-        n = 22; l0 = root + TIE * 0.3; l1 = line.total - 0.004; rings = []
-        for k in range(n):
-            f = k / (n - 1); l = l0 + (l1 - l0) * f; c, t, no = line.at(l); m.along = l - root
-            wide = (0.0150 + 0.0105 * math.sin(math.pi * min(f / 0.7, 1.0)) ** 0.8) * (1 - 0.80 * _smooth(0.62, 1.0, f) ** 1.3)
-            thick = (0.0125 - 0.0035 * _smooth(0.0, 0.5, f)) * (1 - 0.78 * _smooth(0.55, 1.0, f))
-            rings.append(m.ring(c, X, no, wide, thick, 14))
-            if k == 0: m.cap(rings[-1], c, -t, R_PLAIN, 0.5)
-            if k: m.band(rings[-2], rings[-1], R_PLAIN, 0.46 + 0.50 * (k - 1) / (n - 1), 0.46 + 0.50 * f)
-        c, t, no = line.at(line.total)
-        m.fan(rings[-1], m.point(c, t, c - t * 0.004), R_PLAIN, 0.96, 1.0)
-        return m.result()
 
     # three strands plaited around each other: seen from behind a strand comes in from one edge, crosses over the
     # middle, goes under the next strand and comes back from the other edge
@@ -232,24 +212,28 @@ def _bun_frame():
 
 def _bun_base(m, radius, height):
     """the hair below a bun: a low dome on the head, so nothing shows through between the turns"""
-    e1, e2, n = _bun_frame(); rings = []; steps = 5
+    e1, e2, n = _bun_frame(); rings = []; steps = 6
     for k in range(steps):
-        f = k / steps; r = radius * math.cos(f * math.pi / 2); c = BUN_AT + n * (height * math.sin(f * math.pi / 2) - 0.006)
+        f = k / steps; r = radius * math.cos(f * math.pi / 2); c = BUN_AT + n * (height * math.sin(f * math.pi / 2) - 0.010)      # its rim lies inside the head
         rings.append(m.ring(c, e1, e2, r, r, 16))
         for i in rings[-1]: m.cen[i] = BUN_AT - n * 0.02
         if k: m.band(rings[-2], rings[-1], R_PLAIN, 0.05 + 0.35 * (k - 1) / steps, 0.05 + 0.35 * k / steps)
-    top = m.point(BUN_AT + n * (height - 0.006), n, BUN_AT - n * 0.02)
+    top = m.point(BUN_AT + n * (height - 0.010), n, BUN_AT - n * 0.02)
     m.fan(rings[-1], top, R_PLAIN, 0.40, 0.45)
 
 
 def _braided_bun():
-    """a bun wound from a rope of two strands twisted around each other: a spiral from its rim to its middle,
-    rising towards the middle"""
-    m = _Mesh(); e1, e2, n = _bun_frame(); _bun_base(m, 0.034, 0.016)
-    TURNS, R0, A, RS, PITCH = 2.35, 0.0300, 0.0056, 0.0066, 0.026
-    def centre(q):                                       # q: 0 at the rim .. 1 in the middle
-        th = 0.6 + 2 * math.pi * TURNS * q; rho = R0 * (1 - 0.88 * q)
-        lift = 0.0075 + 0.0190 * q ** 0.85 - 0.006 * _smooth(0.0, 0.06, 0.06 - q) - 0.007 * _smooth(0.93, 1.0, q)   # both ends tucked in
+    """a bun wound from a rope of two strands twisted around each other. The rope starts under the bun at the
+    nape, runs once around its rim and then winds in to the middle, rising as it goes; the whole lies on the
+    curve of the head, so it stands off nowhere and looks round from every side."""
+    m = _Mesh(); e1, e2, n = _bun_frame()
+    TURNS, R0, A, RS, PITCH, ROUND = 2.5, 0.0275, 0.0060, 0.0074, 0.028, 0.085      # ROUND: radius of the head below it
+    _bun_base(m, R0 + 0.004, 0.027)
+    def centre(q):                                       # q: 0 at the start of the rope .. 1 in the middle
+        th = -0.5 * math.pi + 2 * math.pi * TURNS * q
+        rho = R0 * (1 - 0.93 * _smooth(0.34, 1.0, q) ** 0.9)                          # the first turn is a circle
+        lift = 0.0045 + 0.0185 * _smooth(0.25, 1.0, q) ** 0.9 - rho * rho / (2 * ROUND)
+        lift -= 0.017 * _smooth(0.09, 0.0, q) + 0.004 * _smooth(0.95, 1.0, q)          # both ends tucked in
         return BUN_AT + rho * (math.cos(th) * e1 + math.sin(th) * e2) + lift * n
     qs = np.linspace(0, 1, 2400); C = np.array([centre(q) for q in qs])
     arc = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(C, axis=0), axis=1))]); total = float(arc[-1])
@@ -261,12 +245,12 @@ def _braided_bun():
             t = centre(min(q + 1e-3, 1.0)) - centre(max(q - 1e-3, 0.0)); t /= np.linalg.norm(t)
             up = n - np.dot(n, t) * t; up /= np.linalg.norm(up); side = np.cross(t, up)
             psi = 2 * math.pi * l / PITCH + math.pi * i
-            env = _smooth(0.0, 0.010, l) * _smooth(total, total - 0.010, l)
+            env = _smooth(0.0, 0.012, l) * _smooth(total, total - 0.010, l)
             p = c + A * env * (math.cos(psi) * side + math.sin(psi) * up)
             dpsi = 2 * math.pi * 0.001 / PITCH
             ts = t * 0.001 + A * env * dpsi * (-math.sin(psi) * side + math.cos(psi) * up); ts /= np.linalg.norm(ts)
             ev = up - np.dot(up, ts) * ts; ev /= np.linalg.norm(ev); eu = np.cross(ts, ev)
-            rings.append(m.ring(p, eu, ev, RS * (0.6 + 0.4 * env), RS * 0.88 * (0.6 + 0.4 * env), 7))
+            rings.append(m.ring(p, eu, ev, RS * (0.6 + 0.4 * env), RS * 0.90 * (0.6 + 0.4 * env), SIDES))
             if k in (0, K - 1): m.cap(rings[-1], p, -ts if k == 0 else ts, R_STRAND, 0.4)
             if k:
                 # the strip shows a strand coming up, lying on top and going under once in half its length

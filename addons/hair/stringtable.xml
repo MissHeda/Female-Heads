@@ -55,8 +55,5 @@
         <Key ID="STR_mhfh_hair_STYLE_Keep">
             <English>As picked</English>
         </Key>
-        <Key ID="STR_mhfh_hair_STYLE_Ponytail">
-            <English>Ponytail</English>
-        </Key>
     </Package>
 </Project>
