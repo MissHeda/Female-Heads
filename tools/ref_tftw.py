@@ -48,6 +48,7 @@ for i in (1, 2, 3, 4):
     want[f"female_head_iceman\\female_0{i}\\xxx_co.paa"] = f"face_0{i}.paa"
 want["female_head_iceman\\female_01\\f_hl_co.paa"] = "hands_01.paa"
 want["female_head_iceman\\female_03\\f_hl_co.paa"] = "hands_03.paa"
+want["hair\\hair_01_co.paa"] = "hair_01.paa"            # photo of a braid (top strip) and a bun
 for k, v in want.items():
     open(os.path.join(TMP, v), "wb").write(files[k])
 for n in [v[:-4] for v in want.values() if v.endswith(".paa")]:

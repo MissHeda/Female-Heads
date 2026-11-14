@@ -15,7 +15,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import mlod, tftw_masks
+import mlod, tftw_masks, braid as braidlib
 from tftw_masks import smooth, blur, N
 
 ROOT = os.path.join(HERE, ".."); DATA = os.path.join(ROOT, "addons", "heads", "data"); MODELS = os.path.join(ROOT, "addons", "heads", "models")
@@ -27,7 +27,7 @@ TFTW = "\\A3_female_heads\\female_head_ICEMAN\\female_01\\"
 
 # hair / eye colours (sRGB 0..1)
 BLACK, DARKBROWN, CHESTNUT, AUBURN = (0.040, 0.036, 0.038), (0.105, 0.062, 0.042), (0.20, 0.105, 0.060), (0.27, 0.085, 0.045)
-LIGHTBROWN, GINGER, BLONDE, PLATINUM = (0.34, 0.225, 0.14), (0.44, 0.215, 0.105), (0.62, 0.50, 0.33), (0.70, 0.635, 0.52)
+LIGHTBROWN, GINGER, BLONDE, PLATINUM = (0.34, 0.225, 0.14), (0.44, 0.215, 0.105), (0.62, 0.50, 0.33), (0.76, 0.67, 0.50)
 E_BLUE, E_GREY, E_GREEN, E_HAZEL, E_BROWN, E_DARK = (0.30, 0.45, 0.62), (0.45, 0.50, 0.54), (0.33, 0.47, 0.30), (0.45, 0.36, 0.18), (0.30, 0.17, 0.08), (0.16, 0.09, 0.05)
 # skin tones: mean cheek colour the face is brought to
 S_PALE, S_FAIR, S_BASE, S_TAN, S_OLIVE, S_BROWN, S_DARK = (0.665, 0.505, 0.460), (0.625, 0.455, 0.405), (0.585, 0.420, 0.370), \
@@ -78,7 +78,7 @@ def masks(base):
     return _M[base]
 
 
-def face_texture(ch, tactical=False):
+def face_texture(ch, tactical=False, braid=False):
     m = masks(ch["base"]); tex = m["tex"]; lum = m["lum"]; pos = m["pos"]
     x, y, z = pos[..., 0], pos[..., 1], pos[..., 2]; ax = np.abs(x)
     skin, hair = m["skin"], m["hair"]
@@ -96,12 +96,21 @@ def face_texture(ch, tactical=False):
         sk = lerp(sk, sk * np.array([0.74, 0.58, 0.47]), fmask * 0.7 * ch["freckles"])
     out = lerp(tex, sk, skin)
     # --- hair: keep the photographed strands, change the colour
-    hl = lum[hair > 0.9]; hmean = float(np.percentile(hl, 85 if ch["base"] == 1 else 55))   # dark hair: only its highlights reach the target colour
+    # (the hair is the dark-haired face's for every character, see tftw_masks)
+    hlum = m["hairlum"]
     ht = np.array(ch["hair"])
-    rel = np.clip(lum / max(hmean, 1e-3), 0.15, 1.6 if ch["base"] == 1 else 2.4)
-    hc = ht[None, None, :] * (rel ** (0.80 if ch["base"] == 1 else 0.70))[..., None]
-    hc = np.minimum(hc, 0.94)
-    out = lerp(out, np.clip(hc, 0, 1), hair)
+    light = float(np.clip((ht.max() - 0.25) / 0.45, 0, 1))                # light hair shows less contrast between strands
+    # dark hair: only its highlights reach the target colour; light hair: its average does
+    hl = hlum[hair > 0.9]; hmean = float(np.percentile(hl, 85 - 40 * light))
+    def recolour(l):
+        rel = np.clip(l / max(hmean, 1e-3), 0.15, 1.6 - 0.45 * light)
+        return np.minimum(ht * (rel ** (0.80 - 0.30 * light))[..., None], 0.94)
+    out = lerp(out, np.clip(recolour(hlum), 0, 1), hair)
+    if braid:                                            # the braid photo goes where the bun's texture was
+        for (x0, x1, y0, y1), row in zip(braidlib.ROWS, braidlib.braid_strip()):
+            row = row / max(float(np.percentile(row, 85)), 1e-3) * hmean
+            out[y0:y1, x0:x1] = np.clip(recolour(row), 0, 1)
+            out[y0 - 3:y0, x0:x1] = out[y0, x0:x1]; out[y1:y1 + 3, x0:x1] = out[y1 - 1, x0:x1]
     # --- brows follow the hair (never lighter than a mid brown), lashes stay dark
     bc = np.minimum(ht * 0.75, np.array([0.30, 0.20, 0.13])) + 0.015
     out = lerp(out, np.broadcast_to(bc, out.shape) * (0.75 + 0.5 * (lum / np.maximum(blur(lum, 9), 1e-3))[..., None]).clip(0, 1.5), np.clip(m["brows"] * 0.9, 0, 1))
@@ -110,7 +119,7 @@ def face_texture(ch, tactical=False):
     ic = np.array(ch["eyes"])[None, None, :] * np.clip(lum / imean, 0.2, 2.5)[..., None]
     out = lerp(out, np.clip(ic, 0, 1), m["iris"] * 0.88)
     if tactical:                                         # their face paint, laid over the new face
-        diff = np.abs(m["tac"] - tex).max(-1)
+        diff = np.abs(m["tac"] - m["orig"]).max(-1)
         a = blur(smooth(0.035, 0.11, diff), 1.0) * (1 - m["eye"]) * (1 - m["mouth"])
         paint = m["tac"] * (0.92 - 0.25 * dark)
         out = lerp(out, paint, a)
@@ -158,7 +167,7 @@ def morph(P, s):
     return P + d
 
 
-def write_model(ch):
+def write_model(ch, braid=False):
     b, lods = mlod.read(SRC_P3D)
     newp, newn = {}, {}
     for L in lods:
@@ -166,11 +175,23 @@ def write_model(ch):
         Pn = morph(L.points, ch["shape"])
         newp[L.index] = Pn; newn[L.index] = mlod.updated_normals(L, L.points, Pn)
     b = mlod.patch(b, lods, newp, newn)
+    name = f"mhfh_{ch['id']}{'_braid' if braid else ''}"
+    tex = PREFIX + f"data\\{name}_co.paa"; mat = PREFIX + "data\\mhfh_face.rvmat"
+    if braid:                                            # take the bun off the first LOD and hang the braid there
+        _, lods2 = mlod.read_bytes(bytes(b)); L = lods2[0]
+        bun = L.selections["Bun"][0] > 0; like = int(np.nonzero(bun)[0][0])
+        fv = np.clip(L.face_v, 0, L.npoints - 1)
+        isbun = np.array([bun[fv[f, :L.face_n[f]]].all() for f in range(L.nfaces)])
+        # the braid goes in first (it needs a bun point as its pattern), then the bun faces come off
+        P, N, faces, weights = braidlib.braid_mesh()
+        b = braidlib.append(b, 0, P, N, faces, weights, tex, mat, like)
+        _, lods3 = mlod.read_bytes(bytes(b)); L3 = lods3[0]
+        keep = np.ones(L3.nfaces, bool); keep[:len(isbun)] = ~isbun
+        b = mlod.rebuild(b, lods3, faces={0: (keep, np.arange(L3.npoints))})
     _, lods2 = mlod.read_bytes(bytes(b))
-    tex = PREFIX + f"data\\mhfh_{ch['id']}_co.paa"; mat = PREFIX + "data\\mhfh_face.rvmat"
     b = mlod.rewrite_face_paths(b, lods2, lambda s: (tex if s.lower().endswith(".paa") else mat if s.lower().endswith(".rvmat") else s))
     os.makedirs(MODELS, exist_ok=True)
-    open(os.path.join(MODELS, f"mhfh_{ch['id']}.p3d"), "wb").write(bytes(b))
+    open(os.path.join(MODELS, name + ".p3d"), "wb").write(bytes(b))
 
 
 # ------------------------------------------------------------------ config
@@ -203,18 +224,19 @@ VertexShaderID = "Super";
 
 def write_config():
     D = "\\" + PREFIX + "data\\"
-    heads = "".join(f'''    class mhfh_{c["id"]}: bun_female_bun_01 {{
-        model = "\\{PREFIX}models\\mhfh_{c["id"]}.p3d";
+    heads = "".join(f'''    class mhfh_{c["id"]}{v}: bun_female_bun_01 {{
+        model = "\\{PREFIX}models\\mhfh_{c["id"]}{v}.p3d";
     }};
-''' for c in CHARS)
+''' for c in CHARS for v in ("", "_braid"))
     faces = ""
     for c in CHARS:
-        for tac in (False, True):
-            cls = f'mhfh_{c["id"]}{"_tac" if tac else ""}'
+        for v, tac in (("", False), ("", True), ("_braid", False), ("_braid", True)):
+            cls = f'mhfh_{c["id"]}{v}{"_tac" if tac else ""}'
+            label = ", ".join(([] if not v else ["Braid"]) + ([] if not tac else ["Tactical"]))
             faces += f'''        class {cls}: B_female_bun_01 {{
             author = "Miss Heda";
-            displayName = "{c["name"]}{" (Tactical)" if tac else ""}";
-            head = "mhfh_{c["id"]}";
+            displayName = "{c["name"]}{" (" + label + ")" if label else ""}";
+            head = "mhfh_{c["id"]}{v}";
             texture = "{D}{cls}_co.paa";
             material = "{D}mhfh_face.rvmat";
             materialWounded1 = "{D}mhfh_face.rvmat";
@@ -275,16 +297,18 @@ class CfgFaces {{
 		};
 		skeletonName = "OFP2_ManSkeleton";
 	};
-''' + "".join(f"\tclass mhfh_{c['id']}: ArmaMan {{}};\n" for c in CHARS) + "};\n"
+''' + "".join(f"\tclass mhfh_{c['id']}{v}: ArmaMan {{}};\n" for c in CHARS for v in ("", "_braid")) + "};\n"
     open(mc, "w", encoding="utf8", newline="\n").write(s)
 
 
 def main():
     for c in CHARS:
         t, fit = face_texture(c); save_paa(t, f"mhfh_{c['id']}_co")
-        tt, _ = face_texture(c, tactical=True); save_paa(tt, f"mhfh_{c['id']}_tac_co")
+        save_paa(face_texture(c, tactical=True)[0], f"mhfh_{c['id']}_tac_co")
+        save_paa(face_texture(c, braid=True)[0], f"mhfh_{c['id']}_braid_co")
+        save_paa(face_texture(c, tactical=True, braid=True)[0], f"mhfh_{c['id']}_braid_tac_co")
         save_paa(hands_texture(c, fit), f"mhfh_{c['id']}_hl_co")
-        write_model(c)
+        write_model(c); write_model(c, braid=True)
         print(c["name"], "done")
     write_config()
     # reshaped reference points for previews and checks
