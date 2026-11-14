@@ -14,7 +14,7 @@
  * None
  *
  * Example:
- * [player, "MHFH_Fraser_Bun"] call mhfh_hair_fnc_restyle;
+ * [player, "MHF_Female_Fraser_Bun"] call mhfh_hair_fnc_restyle;
  *
  * Public: Yes
  */
