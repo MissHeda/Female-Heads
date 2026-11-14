@@ -68,8 +68,12 @@ class _Line:
 def _weights(y, along=None):
     """along: distance from where the hair is tied, None for hair that belongs to the head entirely"""
     if along is None: return {"Head": 1.0}
-    head = 1.0 - _smooth(0.012, 0.075, along); spine = min(_smooth(0.615, 0.570, y), 1 - head)
-    w = {"Head": head, "Spine3": spine, "Neck": max(0.0, 1 - head - spine)}
+    # The braid follows the chain of bones the head hangs on, one after the other and each over a long stretch:
+    # head, upper neck, lower neck, and only at its very end a little of the upper spine. When the head turns,
+    # every one of them turns a part of the way, so the braid bends evenly along its length. Going from head
+    # to spine in a few centimetres put all of the turn into one spot and kinked it there.
+    upper = _smooth(0.015, 0.075, along); lower = _smooth(0.085, 0.150, along); spine = 0.35 * _smooth(0.165, 0.215, along)
+    w = {"Head": 1.0 - upper, "Neck1": upper * (1.0 - lower), "Neck": lower * (1.0 - spine), "Spine3": lower * spine}
     return {k: v for k, v in w.items() if v > 0.004}
 
 
