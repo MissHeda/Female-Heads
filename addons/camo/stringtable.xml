@@ -23,7 +23,7 @@
             <English>Camo cream actions</English>
         </Key>
         <Key ID="STR_mhfh_camo_SETTING_Enabled_DESC">
-            <English>Adds "Apply camo cream" and "Remove\ncamo cream" to the ACE self\ninteraction menu (Equipment).\n\nThey switch a character between her\nface and its Tactical version.\nNeeds ACE3.</English>
+            <English>Adds "Apply camo cream" and "Remove\ncamo cream" to the ACE self\ninteraction menu (Equipment > Face).\n\nThey switch a character between her\nface and its Tactical version.\nNeeds ACE3.</English>
         </Key>
         <Key ID="STR_mhfh_camo_SETTING_SubCategory">
             <English>Camo cream</English>
