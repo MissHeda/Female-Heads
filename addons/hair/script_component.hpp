@@ -9,6 +9,12 @@
 #define BUN_FACE(name) (getText (CFG_FACE(name) >> "mhfh_bunFace"))
 #define BRAID_FACE(name) (getText (CFG_FACE(name) >> "mhfh_braidFace"))
 
+// A face lists all hair styles of its character as pairs of style and face.
+#define STYLES_KEY "mhfh_hairStyles"
+
+// Seconds it takes to do the hair another way by hand (ACE action).
+#define RESTYLE_TIME 5
+
 // The face a unit had before its hair was changed for its headgear. Public, so the machine
 // that owns the unit later knows what to give back.
 #define OWN_VAR QGVAR(ownFace)

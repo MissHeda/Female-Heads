@@ -8,23 +8,24 @@ That mod has to be loaded: normal and ambient maps and the base classes come fro
 
 ## Faces
 
-Every character comes with a bun or a braid, each also as a "(Tactical)" variant with face paint
-(class suffixes `_braid`, `_tac`, `_braid_tac`).
+Every character comes with a bun or a braid, each also as a Tactical version with face paint. The classes are
+named `MHFH_<Name>_<Style>` and `MHFH_<Name>_<Style>_Tactical`, for example `MHFH_Walsh_Bun`,
+`MHFH_Walsh_Braid_Tactical`. In the arsenal every style is followed by its Tactical version.
 
-| Class | Name | Look |
-|---|---|---|
-| `mhfh_kovacs` | Kovacs | black hair, pale skin, grey eyes |
-| `mhfh_reyes` | Reyes | dark brown hair, tan skin, brown eyes |
-| `mhfh_okoye` | Okoye | black hair, dark skin, dark eyes |
-| `mhfh_walsh` | Walsh | auburn hair, fair skin, freckles, green eyes |
-| `mhfh_lindqvist` | Lindqvist | platinum blonde, pale skin, blue eyes |
-| `mhfh_fraser` | Fraser | ginger hair, fair skin, freckles, green eyes |
-| `mhfh_novak` | Novak | light brown hair, hazel eyes |
+| Name | Look |
+|---|---|
+| Kovacs | black hair, pale skin, grey eyes |
+| Reyes | dark brown hair, tan skin, brown eyes |
+| Okoye | black hair, dark skin, dark eyes |
+| Walsh | auburn hair, fair skin, freckles, green eyes |
+| Lindqvist | platinum blonde, pale skin, blue eyes |
+| Fraser | ginger hair, fair skin, freckles, green eyes |
+| Novak | light brown hair, hazel eyes |
 
-Pick them in the Arsenal (Face) or with `player setFace "mhfh_walsh"` / `"mhfh_walsh_tac"`.
+Pick them in the Arsenal (Face) or with `player setFace "MHFH_Walsh_Bun"` / `"MHFH_Walsh_Bun_Tactical"`.
 
-Two more hair styles are being tried out on Fraser only: a French braid (`mhfh_fraser_french`) and a low
-ponytail (`mhfh_fraser_ponytail`), each with its Tactical version.
+Two more hair styles are being tried out on Fraser only: a French braid (`MHFH_Fraser_FrenchBraid`) and a low
+ponytail (`MHFH_Fraser_Ponytail`), each with its Tactical version.
 
 ## Braid and headgear
 
@@ -46,9 +47,15 @@ like any CBA setting.
 An entry with `*` or `?` in it is a pattern for the class name itself (`*` any text, `?` one character, case
 does not matter): `H_Cap_*`, `*Beret*`, `H_Helmet?_*`.
 
+**By hand:** with ACE3 loaded the self interaction menu has "Hair" under Equipment, with every other hair
+style the character comes with. What is picked there counts as her own hair from then on: put up in a bun by
+hand, it stays a bun without a helmet too.
+
 **Other mods:** headgear can ask for the braid itself with `mhfh_keepBraid = 1;` in its `CfgWeapons` class.
 Faces that come with a bun and with a braid take part when they name each other in `CfgFaces`:
 `mhfh_bunFace = "<bun face>";` in the braid face, `mhfh_braidFace = "<braid face>";` in the bun face.
+For the hair action a face lists all styles of its character as pairs of style and face:
+`mhfh_hairStyles[] = {"bun", "<face>", "braid", "<face>"};`
 
 ## Camo cream
 

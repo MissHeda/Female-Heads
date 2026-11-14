@@ -13,52 +13,52 @@ class CfgPatches {
 // New characters on the Task Force Timberwolf female head: reshaped copies of that model with new face textures.
 class CfgHeads {
     class bun_female_bun_01;
-    class mhfh_kovacs: bun_female_bun_01 {
+    class MHFH_Kovacs_Bun: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_kovacs.p3d";
     };
-    class mhfh_kovacs_braid: bun_female_bun_01 {
+    class MHFH_Kovacs_Braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_kovacs_braid.p3d";
     };
-    class mhfh_reyes: bun_female_bun_01 {
+    class MHFH_Reyes_Bun: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_reyes.p3d";
     };
-    class mhfh_reyes_braid: bun_female_bun_01 {
+    class MHFH_Reyes_Braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_reyes_braid.p3d";
     };
-    class mhfh_okoye: bun_female_bun_01 {
+    class MHFH_Okoye_Bun: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_okoye.p3d";
     };
-    class mhfh_okoye_braid: bun_female_bun_01 {
+    class MHFH_Okoye_Braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_okoye_braid.p3d";
     };
-    class mhfh_walsh: bun_female_bun_01 {
+    class MHFH_Walsh_Bun: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_walsh.p3d";
     };
-    class mhfh_walsh_braid: bun_female_bun_01 {
+    class MHFH_Walsh_Braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_walsh_braid.p3d";
     };
-    class mhfh_lindqvist: bun_female_bun_01 {
+    class MHFH_Lindqvist_Bun: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_lindqvist.p3d";
     };
-    class mhfh_lindqvist_braid: bun_female_bun_01 {
+    class MHFH_Lindqvist_Braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_lindqvist_braid.p3d";
     };
-    class mhfh_fraser: bun_female_bun_01 {
+    class MHFH_Fraser_Bun: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_fraser.p3d";
     };
-    class mhfh_fraser_braid: bun_female_bun_01 {
+    class MHFH_Fraser_Braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_fraser_braid.p3d";
     };
-    class mhfh_fraser_french: bun_female_bun_01 {
+    class MHFH_Fraser_FrenchBraid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_fraser_french.p3d";
     };
-    class mhfh_fraser_ponytail: bun_female_bun_01 {
+    class MHFH_Fraser_Ponytail: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_fraser_ponytail.p3d";
     };
-    class mhfh_novak: bun_female_bun_01 {
+    class MHFH_Novak_Bun: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_novak.p3d";
     };
-    class mhfh_novak_braid: bun_female_bun_01 {
+    class MHFH_Novak_Braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_novak_braid.p3d";
     };
 };
@@ -67,10 +67,10 @@ class CfgFaces {
     class Default;
     class Man_A3: Default {
         class B_female_bun_01;
-        class mhfh_kovacs: B_female_bun_01 {
+        class MHFH_Kovacs_Bun: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Kovacs";
-            head = "mhfh_kovacs";
+            displayName = "Kovacs (Bun)";
+            head = "MHFH_Kovacs_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_kovacs_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -79,13 +79,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_kovacs_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_kovacs_braid";
-            mhfh_camoFace = "mhfh_kovacs_tac";
+            mhfh_braidFace = "MHFH_Kovacs_Braid";
+            mhfh_hairStyles[] = {"bun", "MHFH_Kovacs_Bun", "braid", "MHFH_Kovacs_Braid"};
+            mhfh_camoFace = "MHFH_Kovacs_Bun_Tactical";
         };
-        class mhfh_kovacs_tac: B_female_bun_01 {
+        class MHFH_Kovacs_Bun_Tactical: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Kovacs (Tactical)";
-            head = "mhfh_kovacs";
+            displayName = "Kovacs (Bun, Tactical)";
+            head = "MHFH_Kovacs_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_kovacs_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -94,13 +95,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_kovacs_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_kovacs_braid_tac";
-            mhfh_plainFace = "mhfh_kovacs";
+            mhfh_braidFace = "MHFH_Kovacs_Braid_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Kovacs_Bun_Tactical", "braid", "MHFH_Kovacs_Braid_Tactical"};
+            mhfh_plainFace = "MHFH_Kovacs_Bun";
         };
-        class mhfh_kovacs_braid: B_female_bun_01 {
+        class MHFH_Kovacs_Braid: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Kovacs (Braid)";
-            head = "mhfh_kovacs_braid";
+            head = "MHFH_Kovacs_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_kovacs_braid_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -109,13 +111,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_kovacs_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_kovacs";
-            mhfh_camoFace = "mhfh_kovacs_braid_tac";
+            mhfh_bunFace = "MHFH_Kovacs_Bun";
+            mhfh_hairStyles[] = {"bun", "MHFH_Kovacs_Bun", "braid", "MHFH_Kovacs_Braid"};
+            mhfh_camoFace = "MHFH_Kovacs_Braid_Tactical";
         };
-        class mhfh_kovacs_braid_tac: B_female_bun_01 {
+        class MHFH_Kovacs_Braid_Tactical: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Kovacs (Braid, Tactical)";
-            head = "mhfh_kovacs_braid";
+            head = "MHFH_Kovacs_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_kovacs_braid_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -124,13 +127,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_kovacs_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_kovacs_tac";
-            mhfh_plainFace = "mhfh_kovacs_braid";
+            mhfh_bunFace = "MHFH_Kovacs_Bun_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Kovacs_Bun_Tactical", "braid", "MHFH_Kovacs_Braid_Tactical"};
+            mhfh_plainFace = "MHFH_Kovacs_Braid";
         };
-        class mhfh_reyes: B_female_bun_01 {
+        class MHFH_Reyes_Bun: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Reyes";
-            head = "mhfh_reyes";
+            displayName = "Reyes (Bun)";
+            head = "MHFH_Reyes_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_reyes_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -139,13 +143,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_reyes_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_reyes_braid";
-            mhfh_camoFace = "mhfh_reyes_tac";
+            mhfh_braidFace = "MHFH_Reyes_Braid";
+            mhfh_hairStyles[] = {"bun", "MHFH_Reyes_Bun", "braid", "MHFH_Reyes_Braid"};
+            mhfh_camoFace = "MHFH_Reyes_Bun_Tactical";
         };
-        class mhfh_reyes_tac: B_female_bun_01 {
+        class MHFH_Reyes_Bun_Tactical: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Reyes (Tactical)";
-            head = "mhfh_reyes";
+            displayName = "Reyes (Bun, Tactical)";
+            head = "MHFH_Reyes_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_reyes_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -154,13 +159,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_reyes_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_reyes_braid_tac";
-            mhfh_plainFace = "mhfh_reyes";
+            mhfh_braidFace = "MHFH_Reyes_Braid_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Reyes_Bun_Tactical", "braid", "MHFH_Reyes_Braid_Tactical"};
+            mhfh_plainFace = "MHFH_Reyes_Bun";
         };
-        class mhfh_reyes_braid: B_female_bun_01 {
+        class MHFH_Reyes_Braid: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Reyes (Braid)";
-            head = "mhfh_reyes_braid";
+            head = "MHFH_Reyes_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_reyes_braid_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -169,13 +175,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_reyes_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_reyes";
-            mhfh_camoFace = "mhfh_reyes_braid_tac";
+            mhfh_bunFace = "MHFH_Reyes_Bun";
+            mhfh_hairStyles[] = {"bun", "MHFH_Reyes_Bun", "braid", "MHFH_Reyes_Braid"};
+            mhfh_camoFace = "MHFH_Reyes_Braid_Tactical";
         };
-        class mhfh_reyes_braid_tac: B_female_bun_01 {
+        class MHFH_Reyes_Braid_Tactical: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Reyes (Braid, Tactical)";
-            head = "mhfh_reyes_braid";
+            head = "MHFH_Reyes_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_reyes_braid_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -184,13 +191,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_reyes_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_reyes_tac";
-            mhfh_plainFace = "mhfh_reyes_braid";
+            mhfh_bunFace = "MHFH_Reyes_Bun_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Reyes_Bun_Tactical", "braid", "MHFH_Reyes_Braid_Tactical"};
+            mhfh_plainFace = "MHFH_Reyes_Braid";
         };
-        class mhfh_okoye: B_female_bun_01 {
+        class MHFH_Okoye_Bun: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Okoye";
-            head = "mhfh_okoye";
+            displayName = "Okoye (Bun)";
+            head = "MHFH_Okoye_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_okoye_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -199,13 +207,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_okoye_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_okoye_braid";
-            mhfh_camoFace = "mhfh_okoye_tac";
+            mhfh_braidFace = "MHFH_Okoye_Braid";
+            mhfh_hairStyles[] = {"bun", "MHFH_Okoye_Bun", "braid", "MHFH_Okoye_Braid"};
+            mhfh_camoFace = "MHFH_Okoye_Bun_Tactical";
         };
-        class mhfh_okoye_tac: B_female_bun_01 {
+        class MHFH_Okoye_Bun_Tactical: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Okoye (Tactical)";
-            head = "mhfh_okoye";
+            displayName = "Okoye (Bun, Tactical)";
+            head = "MHFH_Okoye_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_okoye_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -214,13 +223,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_okoye_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_okoye_braid_tac";
-            mhfh_plainFace = "mhfh_okoye";
+            mhfh_braidFace = "MHFH_Okoye_Braid_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Okoye_Bun_Tactical", "braid", "MHFH_Okoye_Braid_Tactical"};
+            mhfh_plainFace = "MHFH_Okoye_Bun";
         };
-        class mhfh_okoye_braid: B_female_bun_01 {
+        class MHFH_Okoye_Braid: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Okoye (Braid)";
-            head = "mhfh_okoye_braid";
+            head = "MHFH_Okoye_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_okoye_braid_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -229,13 +239,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_okoye_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_okoye";
-            mhfh_camoFace = "mhfh_okoye_braid_tac";
+            mhfh_bunFace = "MHFH_Okoye_Bun";
+            mhfh_hairStyles[] = {"bun", "MHFH_Okoye_Bun", "braid", "MHFH_Okoye_Braid"};
+            mhfh_camoFace = "MHFH_Okoye_Braid_Tactical";
         };
-        class mhfh_okoye_braid_tac: B_female_bun_01 {
+        class MHFH_Okoye_Braid_Tactical: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Okoye (Braid, Tactical)";
-            head = "mhfh_okoye_braid";
+            head = "MHFH_Okoye_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_okoye_braid_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -244,13 +255,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_okoye_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_okoye_tac";
-            mhfh_plainFace = "mhfh_okoye_braid";
+            mhfh_bunFace = "MHFH_Okoye_Bun_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Okoye_Bun_Tactical", "braid", "MHFH_Okoye_Braid_Tactical"};
+            mhfh_plainFace = "MHFH_Okoye_Braid";
         };
-        class mhfh_walsh: B_female_bun_01 {
+        class MHFH_Walsh_Bun: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Walsh";
-            head = "mhfh_walsh";
+            displayName = "Walsh (Bun)";
+            head = "MHFH_Walsh_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_walsh_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -259,13 +271,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_walsh_braid";
-            mhfh_camoFace = "mhfh_walsh_tac";
+            mhfh_braidFace = "MHFH_Walsh_Braid";
+            mhfh_hairStyles[] = {"bun", "MHFH_Walsh_Bun", "braid", "MHFH_Walsh_Braid"};
+            mhfh_camoFace = "MHFH_Walsh_Bun_Tactical";
         };
-        class mhfh_walsh_tac: B_female_bun_01 {
+        class MHFH_Walsh_Bun_Tactical: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Walsh (Tactical)";
-            head = "mhfh_walsh";
+            displayName = "Walsh (Bun, Tactical)";
+            head = "MHFH_Walsh_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_walsh_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -274,13 +287,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_walsh_braid_tac";
-            mhfh_plainFace = "mhfh_walsh";
+            mhfh_braidFace = "MHFH_Walsh_Braid_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Walsh_Bun_Tactical", "braid", "MHFH_Walsh_Braid_Tactical"};
+            mhfh_plainFace = "MHFH_Walsh_Bun";
         };
-        class mhfh_walsh_braid: B_female_bun_01 {
+        class MHFH_Walsh_Braid: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Walsh (Braid)";
-            head = "mhfh_walsh_braid";
+            head = "MHFH_Walsh_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_walsh_braid_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -289,13 +303,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_walsh";
-            mhfh_camoFace = "mhfh_walsh_braid_tac";
+            mhfh_bunFace = "MHFH_Walsh_Bun";
+            mhfh_hairStyles[] = {"bun", "MHFH_Walsh_Bun", "braid", "MHFH_Walsh_Braid"};
+            mhfh_camoFace = "MHFH_Walsh_Braid_Tactical";
         };
-        class mhfh_walsh_braid_tac: B_female_bun_01 {
+        class MHFH_Walsh_Braid_Tactical: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Walsh (Braid, Tactical)";
-            head = "mhfh_walsh_braid";
+            head = "MHFH_Walsh_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_walsh_braid_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -304,13 +319,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_walsh_tac";
-            mhfh_plainFace = "mhfh_walsh_braid";
+            mhfh_bunFace = "MHFH_Walsh_Bun_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Walsh_Bun_Tactical", "braid", "MHFH_Walsh_Braid_Tactical"};
+            mhfh_plainFace = "MHFH_Walsh_Braid";
         };
-        class mhfh_lindqvist: B_female_bun_01 {
+        class MHFH_Lindqvist_Bun: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Lindqvist";
-            head = "mhfh_lindqvist";
+            displayName = "Lindqvist (Bun)";
+            head = "MHFH_Lindqvist_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_lindqvist_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -319,13 +335,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_lindqvist_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_lindqvist_braid";
-            mhfh_camoFace = "mhfh_lindqvist_tac";
+            mhfh_braidFace = "MHFH_Lindqvist_Braid";
+            mhfh_hairStyles[] = {"bun", "MHFH_Lindqvist_Bun", "braid", "MHFH_Lindqvist_Braid"};
+            mhfh_camoFace = "MHFH_Lindqvist_Bun_Tactical";
         };
-        class mhfh_lindqvist_tac: B_female_bun_01 {
+        class MHFH_Lindqvist_Bun_Tactical: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Lindqvist (Tactical)";
-            head = "mhfh_lindqvist";
+            displayName = "Lindqvist (Bun, Tactical)";
+            head = "MHFH_Lindqvist_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_lindqvist_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -334,13 +351,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_lindqvist_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_lindqvist_braid_tac";
-            mhfh_plainFace = "mhfh_lindqvist";
+            mhfh_braidFace = "MHFH_Lindqvist_Braid_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Lindqvist_Bun_Tactical", "braid", "MHFH_Lindqvist_Braid_Tactical"};
+            mhfh_plainFace = "MHFH_Lindqvist_Bun";
         };
-        class mhfh_lindqvist_braid: B_female_bun_01 {
+        class MHFH_Lindqvist_Braid: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Lindqvist (Braid)";
-            head = "mhfh_lindqvist_braid";
+            head = "MHFH_Lindqvist_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_lindqvist_braid_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -349,13 +367,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_lindqvist_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_lindqvist";
-            mhfh_camoFace = "mhfh_lindqvist_braid_tac";
+            mhfh_bunFace = "MHFH_Lindqvist_Bun";
+            mhfh_hairStyles[] = {"bun", "MHFH_Lindqvist_Bun", "braid", "MHFH_Lindqvist_Braid"};
+            mhfh_camoFace = "MHFH_Lindqvist_Braid_Tactical";
         };
-        class mhfh_lindqvist_braid_tac: B_female_bun_01 {
+        class MHFH_Lindqvist_Braid_Tactical: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Lindqvist (Braid, Tactical)";
-            head = "mhfh_lindqvist_braid";
+            head = "MHFH_Lindqvist_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_lindqvist_braid_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -364,13 +383,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_lindqvist_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_lindqvist_tac";
-            mhfh_plainFace = "mhfh_lindqvist_braid";
+            mhfh_bunFace = "MHFH_Lindqvist_Bun_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Lindqvist_Bun_Tactical", "braid", "MHFH_Lindqvist_Braid_Tactical"};
+            mhfh_plainFace = "MHFH_Lindqvist_Braid";
         };
-        class mhfh_fraser: B_female_bun_01 {
+        class MHFH_Fraser_Bun: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Fraser";
-            head = "mhfh_fraser";
+            displayName = "Fraser (Bun)";
+            head = "MHFH_Fraser_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_fraser_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -379,13 +399,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_fraser_braid";
-            mhfh_camoFace = "mhfh_fraser_tac";
+            mhfh_braidFace = "MHFH_Fraser_Braid";
+            mhfh_hairStyles[] = {"bun", "MHFH_Fraser_Bun", "braid", "MHFH_Fraser_Braid", "french", "MHFH_Fraser_FrenchBraid", "ponytail", "MHFH_Fraser_Ponytail"};
+            mhfh_camoFace = "MHFH_Fraser_Bun_Tactical";
         };
-        class mhfh_fraser_tac: B_female_bun_01 {
+        class MHFH_Fraser_Bun_Tactical: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Fraser (Tactical)";
-            head = "mhfh_fraser";
+            displayName = "Fraser (Bun, Tactical)";
+            head = "MHFH_Fraser_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_fraser_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -394,13 +415,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_fraser_braid_tac";
-            mhfh_plainFace = "mhfh_fraser";
+            mhfh_braidFace = "MHFH_Fraser_Braid_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Fraser_Bun_Tactical", "braid", "MHFH_Fraser_Braid_Tactical", "french", "MHFH_Fraser_FrenchBraid_Tactical", "ponytail", "MHFH_Fraser_Ponytail_Tactical"};
+            mhfh_plainFace = "MHFH_Fraser_Bun";
         };
-        class mhfh_fraser_braid: B_female_bun_01 {
+        class MHFH_Fraser_Braid: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Fraser (Braid)";
-            head = "mhfh_fraser_braid";
+            head = "MHFH_Fraser_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_fraser_braid_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -409,13 +431,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_fraser";
-            mhfh_camoFace = "mhfh_fraser_braid_tac";
+            mhfh_bunFace = "MHFH_Fraser_Bun";
+            mhfh_hairStyles[] = {"bun", "MHFH_Fraser_Bun", "braid", "MHFH_Fraser_Braid", "french", "MHFH_Fraser_FrenchBraid", "ponytail", "MHFH_Fraser_Ponytail"};
+            mhfh_camoFace = "MHFH_Fraser_Braid_Tactical";
         };
-        class mhfh_fraser_braid_tac: B_female_bun_01 {
+        class MHFH_Fraser_Braid_Tactical: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Fraser (Braid, Tactical)";
-            head = "mhfh_fraser_braid";
+            head = "MHFH_Fraser_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_fraser_braid_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -424,13 +447,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_fraser_tac";
-            mhfh_plainFace = "mhfh_fraser_braid";
+            mhfh_bunFace = "MHFH_Fraser_Bun_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Fraser_Bun_Tactical", "braid", "MHFH_Fraser_Braid_Tactical", "french", "MHFH_Fraser_FrenchBraid_Tactical", "ponytail", "MHFH_Fraser_Ponytail_Tactical"};
+            mhfh_plainFace = "MHFH_Fraser_Braid";
         };
-        class mhfh_fraser_french: B_female_bun_01 {
+        class MHFH_Fraser_FrenchBraid: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Fraser (French Braid)";
-            head = "mhfh_fraser_french";
+            head = "MHFH_Fraser_FrenchBraid";
             texture = "\z\mhfh\addons\heads\data\mhfh_fraser_french_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -439,14 +463,15 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_fraser";
-            mhfh_braidFace = "mhfh_fraser_braid";
-            mhfh_camoFace = "mhfh_fraser_french_tac";
+            mhfh_bunFace = "MHFH_Fraser_Bun";
+            mhfh_braidFace = "MHFH_Fraser_Braid";
+            mhfh_hairStyles[] = {"bun", "MHFH_Fraser_Bun", "braid", "MHFH_Fraser_Braid", "french", "MHFH_Fraser_FrenchBraid", "ponytail", "MHFH_Fraser_Ponytail"};
+            mhfh_camoFace = "MHFH_Fraser_FrenchBraid_Tactical";
         };
-        class mhfh_fraser_french_tac: B_female_bun_01 {
+        class MHFH_Fraser_FrenchBraid_Tactical: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Fraser (French Braid, Tactical)";
-            head = "mhfh_fraser_french";
+            head = "MHFH_Fraser_FrenchBraid";
             texture = "\z\mhfh\addons\heads\data\mhfh_fraser_french_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -455,14 +480,15 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_fraser_tac";
-            mhfh_braidFace = "mhfh_fraser_braid_tac";
-            mhfh_plainFace = "mhfh_fraser_french";
+            mhfh_bunFace = "MHFH_Fraser_Bun_Tactical";
+            mhfh_braidFace = "MHFH_Fraser_Braid_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Fraser_Bun_Tactical", "braid", "MHFH_Fraser_Braid_Tactical", "french", "MHFH_Fraser_FrenchBraid_Tactical", "ponytail", "MHFH_Fraser_Ponytail_Tactical"};
+            mhfh_plainFace = "MHFH_Fraser_FrenchBraid";
         };
-        class mhfh_fraser_ponytail: B_female_bun_01 {
+        class MHFH_Fraser_Ponytail: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Fraser (Ponytail)";
-            head = "mhfh_fraser_ponytail";
+            head = "MHFH_Fraser_Ponytail";
             texture = "\z\mhfh\addons\heads\data\mhfh_fraser_ponytail_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -471,13 +497,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_fraser";
-            mhfh_camoFace = "mhfh_fraser_ponytail_tac";
+            mhfh_bunFace = "MHFH_Fraser_Bun";
+            mhfh_hairStyles[] = {"bun", "MHFH_Fraser_Bun", "braid", "MHFH_Fraser_Braid", "french", "MHFH_Fraser_FrenchBraid", "ponytail", "MHFH_Fraser_Ponytail"};
+            mhfh_camoFace = "MHFH_Fraser_Ponytail_Tactical";
         };
-        class mhfh_fraser_ponytail_tac: B_female_bun_01 {
+        class MHFH_Fraser_Ponytail_Tactical: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Fraser (Ponytail, Tactical)";
-            head = "mhfh_fraser_ponytail";
+            head = "MHFH_Fraser_Ponytail";
             texture = "\z\mhfh\addons\heads\data\mhfh_fraser_ponytail_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -486,13 +513,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_fraser_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_fraser_tac";
-            mhfh_plainFace = "mhfh_fraser_ponytail";
+            mhfh_bunFace = "MHFH_Fraser_Bun_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Fraser_Bun_Tactical", "braid", "MHFH_Fraser_Braid_Tactical", "french", "MHFH_Fraser_FrenchBraid_Tactical", "ponytail", "MHFH_Fraser_Ponytail_Tactical"};
+            mhfh_plainFace = "MHFH_Fraser_Ponytail";
         };
-        class mhfh_novak: B_female_bun_01 {
+        class MHFH_Novak_Bun: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Novak";
-            head = "mhfh_novak";
+            displayName = "Novak (Bun)";
+            head = "MHFH_Novak_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_novak_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -501,13 +529,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_novak_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_novak_braid";
-            mhfh_camoFace = "mhfh_novak_tac";
+            mhfh_braidFace = "MHFH_Novak_Braid";
+            mhfh_hairStyles[] = {"bun", "MHFH_Novak_Bun", "braid", "MHFH_Novak_Braid"};
+            mhfh_camoFace = "MHFH_Novak_Bun_Tactical";
         };
-        class mhfh_novak_tac: B_female_bun_01 {
+        class MHFH_Novak_Bun_Tactical: B_female_bun_01 {
             author = "Miss Heda";
-            displayName = "Novak (Tactical)";
-            head = "mhfh_novak";
+            displayName = "Novak (Bun, Tactical)";
+            head = "MHFH_Novak_Bun";
             texture = "\z\mhfh\addons\heads\data\mhfh_novak_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -516,13 +545,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_novak_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "mhfh_novak_braid_tac";
-            mhfh_plainFace = "mhfh_novak";
+            mhfh_braidFace = "MHFH_Novak_Braid_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Novak_Bun_Tactical", "braid", "MHFH_Novak_Braid_Tactical"};
+            mhfh_plainFace = "MHFH_Novak_Bun";
         };
-        class mhfh_novak_braid: B_female_bun_01 {
+        class MHFH_Novak_Braid: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Novak (Braid)";
-            head = "mhfh_novak_braid";
+            head = "MHFH_Novak_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_novak_braid_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -531,13 +561,14 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_novak_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_novak";
-            mhfh_camoFace = "mhfh_novak_braid_tac";
+            mhfh_bunFace = "MHFH_Novak_Bun";
+            mhfh_hairStyles[] = {"bun", "MHFH_Novak_Bun", "braid", "MHFH_Novak_Braid"};
+            mhfh_camoFace = "MHFH_Novak_Braid_Tactical";
         };
-        class mhfh_novak_braid_tac: B_female_bun_01 {
+        class MHFH_Novak_Braid_Tactical: B_female_bun_01 {
             author = "Miss Heda";
             displayName = "Novak (Braid, Tactical)";
-            head = "mhfh_novak_braid";
+            head = "MHFH_Novak_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_novak_braid_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
@@ -546,8 +577,9 @@ class CfgFaces {
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
             textureHL2 = "\z\mhfh\addons\heads\data\mhfh_novak_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "mhfh_novak_tac";
-            mhfh_plainFace = "mhfh_novak_braid";
+            mhfh_bunFace = "MHFH_Novak_Bun_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHFH_Novak_Bun_Tactical", "braid", "MHFH_Novak_Braid_Tactical"};
+            mhfh_plainFace = "MHFH_Novak_Braid";
         };
     };
 };

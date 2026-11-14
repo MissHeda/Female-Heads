@@ -38,9 +38,10 @@ S_PALE, S_FAIR, S_BASE, S_TAN, S_OLIVE, S_BROWN, S_DARK = (0.665, 0.505, 0.460),
     (0.515, 0.350, 0.280), (0.490, 0.345, 0.265), (0.365, 0.235, 0.180), (0.285, 0.192, 0.152)
 
 # shape: millimetres (jaw, chin, chin_fwd, nose_len, nose_up, cheek, lips, brow) and a relative nose width
-# hair styles besides the bun: suffix of models, textures and classes -> name shown in the game. Every character
+# hair styles: suffix of models and textures (none for the bun) -> name shown in the game. Every character
 # has the braid; the others are tried out on single characters first.
-STYLES = {"braid": "Braid", "french": "French Braid", "ponytail": "Ponytail"}
+STYLES = {"": "Bun", "braid": "Braid", "french": "French Braid", "ponytail": "Ponytail"}
+STYLE_CLASS = {"": "Bun", "braid": "Braid", "french": "FrenchBraid", "ponytail": "Ponytail"}      # in class names
 EXTRA_STYLES = {"fraser": ("french", "ponytail")}
 # styles with the hair on the head as a layer of its own (tools/hairshell.py) instead of painted on the skull.
 # Headgear goes through that layer, so these change to another style under any headgear (addons/hair).
@@ -422,26 +423,36 @@ assert RVMAT_HL.count("hl_") == 3
 
 def write_config():
     D = "\\" + PREFIX + "data\\"
-    heads = "".join(f'''    class mhfh_{c["id"]}{v}: bun_female_bun_01 {{
-        model = "\\{PREFIX}models\\mhfh_{c["id"]}{v}.p3d";
+    # Class names say what a face is: MHFH_<Name>_<Style>[_Tactical]. The display names carry the style first, so
+    # the list in the arsenal shows every style followed by its Tactical version. The files keep their short names.
+    def cls(c, style="", tac=False):
+        return f'MHFH_{c["name"]}_{STYLE_CLASS[style]}{"_Tactical" if tac else ""}'
+
+    def fname(c, style="", tac=False):
+        return f'mhfh_{c["id"]}{"_" + style if style else ""}{"_tac" if tac else ""}'
+
+    heads = "".join(f'''    class {cls(c, s)}: bun_female_bun_01 {{
+        model = "\\{PREFIX}models\\{fname(c, s)}.p3d";
     }};
-''' for c in CHARS for v in ("_" + s if s else "" for s in styles(c)))
+''' for c in CHARS for s in styles(c))
     faces = ""
     for c in CHARS:
-        for v, tac in ((("_" + s if s else ""), t) for s in styles(c) for t in (False, True)):
-            cls = f'mhfh_{c["id"]}{v}{"_tac" if tac else ""}'
-            label = ", ".join(([] if not v else [STYLES[v[1:]]]) + ([] if not tac else ["Tactical"]))
-            # the same character with the other hair, for the change with the headgear (addons/hair)
-            # (a style that does not go with any headgear names both and so changes under caps as well)
-            bun = (f'            mhfh_bunFace = "mhfh_{c["id"]}{"_tac" if tac else ""}";\n' if v else "") + \
-                  (f'            mhfh_braidFace = "mhfh_{c["id"]}_braid{"_tac" if tac else ""}";\n' if (not v or v[1:] in SHELL_STYLES) else "")
-            # the same face with and without face paint, for the camo cream action (addons/camo)
-            camo = (f'            mhfh_plainFace = "mhfh_{c["id"]}{v}";\n' if tac else f'            mhfh_camoFace = "mhfh_{c["id"]}{v}_tac";\n')
-            faces += f'''        class {cls}: B_female_bun_01 {{
+        for s in styles(c):
+            for tac in (False, True):
+                links = ""
+                # the same character with the other hair, for the change with the headgear (addons/hair): the bun
+                # face names its braid, the braid face its bun; a style that goes with no headgear names both
+                if s: links += f'            mhfh_bunFace = "{cls(c, "", tac)}";\n'
+                if not s or s in SHELL_STYLES: links += f'            mhfh_braidFace = "{cls(c, "braid", tac)}";\n'
+                # all her hair styles in this paint state, for the hair action (addons/hair)
+                links += "            mhfh_hairStyles[] = {" + ", ".join(f'"{k or "bun"}", "{cls(c, k, tac)}"' for k in styles(c)) + "};\n"
+                # the same face with and without face paint, for the camo cream action (addons/camo)
+                links += f'            mhfh_plainFace = "{cls(c, s)}";\n' if tac else f'            mhfh_camoFace = "{cls(c, s, True)}";\n'
+                faces += f'''        class {cls(c, s, tac)}: B_female_bun_01 {{
             author = "Miss Heda";
-            displayName = "{c["name"]}{" (" + label + ")" if label else ""}";
-            head = "mhfh_{c["id"]}{v}";
-            texture = "{D}{cls}_co.paa";
+            displayName = "{c["name"]} ({STYLES[s]}{", Tactical" if tac else ""})";
+            head = "{cls(c, s)}";
+            texture = "{D}{fname(c, s, tac)}_co.paa";
             material = "{D}mhfh_face.rvmat";
             materialWounded1 = "{D}mhfh_face.rvmat";
             materialWounded2 = "{D}mhfh_face.rvmat";
@@ -449,7 +460,7 @@ def write_config():
             materialHL = "{D}mhfh_hl.rvmat";
             textureHL2 = "{D}mhfh_{c["id"]}_hl_co.paa";
             materialHL2 = "{D}mhfh_hl.rvmat";
-{bun}{camo}        }};
+{links}        }};
 '''
     cfg = f'''// Generated by tools/characters.py
 class CfgPatches {{

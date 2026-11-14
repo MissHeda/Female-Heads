@@ -59,7 +59,14 @@ def shell(L, hair_soft, seed=3):
     val = np.zeros(L.npoints); cnt = np.zeros(L.npoints)
     s = _sample(hair_soft, U)
     for k in range(3): np.add.at(val, T[:, k], s[:, k]); np.add.at(cnt, T[:, k], 1)
-    val = _smooth(0.55, 0.97, val / np.maximum(cnt, 1)); val[bun] = 0
+    val = _smooth(0.72, 1.0, val / np.maximum(cnt, 1)); val[bun] = 0
+    # The layer may only rise where the picture shows hair. A point lifts the faces around it, so it only counts as
+    # hair as far as all its neighbours do: the rise then lies inside the hair, and skin at the hairline and in the
+    # parting stays on the skull.
+    near = val.copy()
+    for a, b in ((0, 1), (1, 2), (2, 0)):
+        np.minimum.at(near, T[:, a], val[T[:, b]]); np.minimum.at(near, T[:, b], val[T[:, a]])
+    val = near
     take = (val[T] > 0).any(1) & ~bun[T].any(1)
     # outward direction at every point (MLOD: cross(p1-p0, p2-p0) points inwards)
     out = np.zeros((L.npoints, 3)); fn = np.cross(P[T[:, 1]] - P[T[:, 0]], P[T[:, 2]] - P[T[:, 0]])
@@ -75,8 +82,8 @@ def shell(L, hair_soft, seed=3):
         key = ("e", min(i, j), max(i, j))
         if key not in pts:
             d = out[i] + out[j]; d /= max(np.linalg.norm(d), 1e-12)
-            hv = 0.0 if (val[i] == 0 and val[j] == 0) else float(_smooth(0.55, 0.97, _sample(hair_soft, uv)))
-            pts[key] = len(base); base.append((P[i] + P[j]) / 2); dirs.append(d); hairv.append(max(hv, min(val[i], val[j]))); wsrc.append((i, j))
+            hv = 0.0 if (val[i] == 0 or val[j] == 0) else (val[i] + val[j]) / 2
+            pts[key] = len(base); base.append((P[i] + P[j]) / 2); dirs.append(d); hairv.append(hv); wsrc.append((i, j))
         return pts[key]
     faces = []
     for t, uv in zip(T[take], U[take]):

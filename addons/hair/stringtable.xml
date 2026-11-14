@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project name="mhfh">
     <Package name="hair">
+        <Key ID="STR_mhfh_hair_Action_Hair">
+            <English>Hair</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_Restyling">
+            <English>Doing hair...</English>
+        </Key>
         <Key ID="STR_mhfh_hair_SETTING_BraidHeadgear">
             <English>Headgear worn with the braid</English>
         </Key>
@@ -43,8 +49,14 @@
         <Key ID="STR_mhfh_hair_STYLE_Bun">
             <English>Bun</English>
         </Key>
+        <Key ID="STR_mhfh_hair_STYLE_French">
+            <English>French braid</English>
+        </Key>
         <Key ID="STR_mhfh_hair_STYLE_Keep">
             <English>As picked</English>
+        </Key>
+        <Key ID="STR_mhfh_hair_STYLE_Ponytail">
+            <English>Ponytail</English>
         </Key>
     </Package>
 </Project>

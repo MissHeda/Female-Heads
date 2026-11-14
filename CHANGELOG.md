@@ -13,6 +13,9 @@
 - Two hair styles to try out on Fraser: French braid and low ponytail. The French braid has its hair as a
   layer with depth over the skull.
 - Face paint thins out around the ears instead of stopping at them.
+- Classes renamed to `MHFH_<Name>_<Style>[_Tactical]`; the bun is named in the display name too, so every
+  style is followed by its Tactical version in the arsenal.
+- With ACE3: "Hair" in the self interaction menu to change the hair style by hand.
 - No more dark streaks on the neck: repaired shadow volume.
 - Arms and legs have the tone of the neck.
 - Eyes keep the brightness of the photographed ones, no more glowing iris.
