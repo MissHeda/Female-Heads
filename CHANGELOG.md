@@ -13,6 +13,8 @@
 - Face paint thins out around the ears instead of stopping at them.
 - Classes renamed to `MHF_Female_<Name>_<Style>[_Tactical]`; the bun is named in the display name too, so every
   style is followed by its Tactical version in the arsenal. The Timberwolf faces are listed the same way.
+- The two Timberwolf faces (Carter, Medrano) come with the braid as well, plain and Tactical, and follow the
+  headgear like the others.
 - With ACE3: "Hair" in the self interaction menu to change the hair style by hand.
 - Hair and camo cream actions together in one ACE menu: Equipment > Face.
 - No more dark streaks on the neck: repaired shadow volume.

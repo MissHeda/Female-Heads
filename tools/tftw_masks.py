@@ -58,8 +58,9 @@ def raster():
     return pos, cov, iseye
 
 
-def build(base):
-    """base: 'face_01' (dark hair) or 'face_03' (blonde). Returns dict of soft masks (0..1) in the 1024 atlas."""
+def build(base, own_hair=False):
+    """base: 'face_01' (dark hair) or 'face_03' (blonde). Returns dict of soft masks (0..1) in the 1024 atlas.
+    own_hair: the face keeps its own hair (the texture is not changed, the hair mask is that of its own hair)."""
     pos, cov, iseye = raster()
     tex = load(base)
     lum = tex @ np.array([0.30, 0.59, 0.11]); r, g, b = tex[..., 0], tex[..., 1], tex[..., 2]
@@ -74,11 +75,15 @@ def build(base):
         return smooth(0.35, 0.65, blur(smooth(0.20, 0.30, l_) * smooth(0.06, 0.10, s_), 2.0))
     # Every character wears the hair of the dark-haired face: it is the one whose hair can be cut out cleanly
     # (dark hair on light skin), with its soft photographed hairline. The hair itself is taken from that texture.
-    hairtex = tex if base == "face_01" else load("face_01")
+    hairtex = tex if base == "face_01" or own_hair else load("face_01")
     hairlum = hairtex @ np.array([0.30, 0.59, 0.11])
     skinc = split(hairtex)
     region = cov & ~mouth & ~iseye & ~bun
-    if base != "face_01":
+    if own_hair and base != "face_01":
+        # blonde hair is as light as skin and nearly its colour: skin is what is smooth as well
+        detail = blur(np.abs(lum - blur(lum, 2.0)), 5.0)
+        skinc = smooth(0.35, 0.65, blur(smooth(0.105, 0.135, sat) * smooth(0.020, 0.011, detail) * smooth(0.18, 0.28, lum), 4.0))
+    elif base != "face_01":
         # This face has its own (blonde) hair, with a different hairline. Wherever the result shows skin, the
         # texture must be skin: keep what clearly is skin (reddish and smooth) and fill the rest from around it.
         detail = blur(np.abs(lum - blur(lum, 2.0)), 5.0)
@@ -108,7 +113,7 @@ def build(base):
     skin = skinc * region
     hair = (1 - skinc) * region * (1 - faceint)
     skin = np.maximum(skin, faceint)                     # ... they change with the skin around them
-    hair = hair * smooth(0.30, 0.16, hairlum)             # a light pixel at the hairline is skin showing through
+    if not own_hair or base == "face_01": hair = hair * smooth(0.30, 0.16, hairlum)             # a light pixel at the hairline is skin showing through
     hair = np.maximum(hair, bun.astype(float))
     patch_ = (vv > 0.775) & (uu < 0.30) & ~bun & ~(cov & (y < 0.57) & (z < 0.03))       # hair patch, not the chest corner next to it
     hair = np.where(patch_, 1.0, hair); skin = np.where(patch_, 0.0, skin)

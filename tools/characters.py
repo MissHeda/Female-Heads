@@ -151,7 +151,7 @@ def paint_layer(m):
 BUN_AT, BRAID_AT = (0.665, 0.080), (0.727, 0.078)       # (height, depth): where the bun sat, where the braid starts
 
 
-def hair_to_braid(m, hlum, at=None):
+def hair_to_braid(m, hlum, at=None, drawn_all=False):
     """The photographed hair runs to the bun. For the braid it has to run to the start of the braid, 6 cm higher.
     The hair is laid out flat (around the head, down the head) and changed there:
       1. the spot the bun covered (photographed dark, with a rim) is filled with the hair around it, mirrored at
@@ -215,6 +215,8 @@ def hair_to_braid(m, hlum, at=None):
     #     is the little there was under the bun, stretched to several times its length: flat, with stray lights
     #     running anywhere. Those are taken out (only light and dark of the area stay) and strands drawn instead.
     # They do not run dead straight to one point: their direction wanders with the place.
+    # drawn_all: strands are drawn over all of the moved hair, and only its light and dark over a wider area stay.
+    # For photographed hair that is wound around its bun: moved up, that shows as rings around the braid.
     rr = np.hypot(s, t - tr); near = head & ((rr < 0.07) | (k > 0.001))
     pn = pos[near]; r_ = rr[near]
     # (by a few millimetres sideways at any distance: hair pulled into a braid is taut, not wavy)
@@ -228,10 +230,11 @@ def hair_to_braid(m, hlum, at=None):
         tot += amp ** 2 / 2
     n /= np.sqrt(np.maximum(tot, 1e-6))
     below = (smooth(tr - 0.006, tr + 0.022, t) * smooth(0.0, 0.10, k))[near] * 0.9
-    local = np.maximum(blurf(res, 6), 1e-3)[near]                                      # light and dark of the photo stay
+    local = np.maximum(blurf(res, 16 if drawn_all else 6), 1e-3)[near]                 # light and dark of the photo stay
     drawn = local * np.clip(1 + (1.1 + 0.5 * below) * sigma * n, 0.4, 1.9)
     patchy = 0.25 + 0.30 * smooth(-0.8, 0.8, sine_noise(pn, 70.0, 23, 8, (0.6, 1.6)))
     wd = np.maximum(smooth(0.062, 0.028, r_) * patchy, below)
+    if drawn_all: wd = np.maximum(wd, 0.92 * np.maximum(smooth(0.0, 0.10, k), smooth(0.068, 0.045, rr))[near])
     res[near] = res[near] * (1 - wd) + drawn * wd
     return res
 
@@ -308,6 +311,54 @@ def face_texture(ch, tactical=False, braid=False):
     return np.clip(out, 0, 1), (neck, g)
 
 
+# ------------------------------------------------------------------ the Timberwolf faces with the braid
+# Carter and Medrano themselves: their head and their texture as they are, with the braid instead of the bun.
+ORIGINALS = [dict(id="carter", name="Carter", base=1), dict(id="medrano", name="Medrano", base=3)]
+TFTW_HEAD = dict(id="tftw", shape=None)                 # one model for both: the head is not reshaped
+_MO = {}
+
+
+def original_texture(o, tactical=False):
+    """A Timberwolf face for the braid: their texture (plain or painted), in which only the hair at the back of
+    the head is changed, so the face is the same as with their bun. The hair runs to the start of the braid
+    (hair_to_braid) and keeps its own colour: the colour their hair has at every brightness is measured and the
+    changed hair is given that. The braid's strands go where the texture of the bun was, as light as the bun."""
+    base = o["base"]
+    if base not in _MO: _MO[base] = masks(1) if base == 1 else tftw_masks.build(f"face_0{base}", own_hair=True)
+    m = _MO[base]; tex = tftw_masks.load(f"face_0{base + (1 if tactical else 0)}"); hlum = tex @ LUMW
+    pos = m["pos"]; y, z = pos[..., 1], pos[..., 2]; hair = m["hair"]
+    ref = m["cov"] & ~m["bun"] & (hair > 0.9) & (z > 0.02) & (y > 0.66)
+    l = hlum[ref]; px = tex[ref]; mid, hue = [], []
+    for a, b in zip(*(lambda q: (q[:-1], q[1:]))(np.quantile(l, np.linspace(0.02, 0.98, 25)))):
+        sel = (l >= a) & (l <= b)
+        if sel.sum() < 20 or (mid and l[sel].mean() <= mid[-1]): continue
+        mid.append(l[sel].mean()); hue.append(px[sel].mean(0) / max(l[sel].mean(), 0.02))
+    mid = np.array(mid); hue = np.array(hue)
+    colour = lambda v: np.clip(np.stack([np.interp(v, mid, hue[:, i]) for i in range(3)], -1) * v[..., None], 0, 1)
+    res = hair_to_braid(m, hlum, drawn_all=base != 1)
+    touched = np.clip(blurf((np.abs(res - hlum) > 0.004).astype(float), 4) * 2.5, 0, 1)
+    out = lerp(tex, colour(res), hair * touched)
+    level = float(hlum[m["bun"]].mean())
+    # light hair shows less of the braid's own light and dark (as on the other characters, see recolour), and the
+    # whole braid has the colour the hair has at its brightness: its dark parts are not her dark roots
+    tone = colour(np.array([level]))[0]; light = float(smooth(0.15, 0.30, tone.max())); floor = 0.2 + 0.38 * light
+
+    def strand(rel):
+        soft = np.where(rel < 1, floor + (1 - floor) * np.clip(rel, 0, 1) ** 0.8, np.minimum(rel, 1.6 - 0.45 * light))
+        dark = colour(np.clip(rel, floor, 1.6) * level)
+        return np.clip(dark * (1 - light) + tone * 1.12 * soft[..., None] * light, 0, 1)
+    print(f"{o['name']}{' tactical' if tactical else ''}: hair {np.median(l):.3f}, bun {level:.3f}, colour off by {float(np.abs(colour(l) - px).mean()):.4f}")
+    strips, tie = braidlib.textures()
+    for (x0, x1, y0, y1), row in strips:
+        c = strand(row)
+        out[y0:y1, x0:x1] = c
+        out[y0 - 3:y0, x0:x1] = c[-3:]; out[y1:y1 + 3, x0:x1] = c[:3]
+        out[y0 - 3:y1 + 3, x0 - 3:x0] = out[y0 - 3:y1 + 3, x0:x0 + 1]; out[y0 - 3:y1 + 3, x1:x1 + 3] = out[y0 - 3:y1 + 3, x1 - 1:x1]
+    x0, x1, y0, y1 = tie
+    out[y0 - 3:y1 + 3, x0 - 3:x1 + 3] = np.array([0.050, 0.046, 0.050]) + np.random.default_rng(2).normal(0, 0.006, (y1 - y0 + 6, x1 - x0 + 6, 1))
+    return np.clip(out, 0, 1)
+
+
 def hands_texture(ch, skinfit):
     neck, g = skinfit
     h = np.asarray(Image.open(os.path.join(REF, "tex", f"hands_0{ch['base']}.png")).convert("RGB"), dtype=np.float64) / 255
@@ -352,18 +403,19 @@ def morph(P, s):
 _SRC = []
 
 
-def write_model(ch, braid=False):
+def write_model(ch, braid=False, tex=None):
+    """tex: name of the texture file the model names, where it is not the model's own"""
     style = "braid" if braid is True else (braid or "")
     if not _SRC: _SRC.append(bytes(shadow.fix(open(SRC_P3D, "rb").read(), verbose=True)))
     b, lods = mlod.read_bytes(_SRC[0])
     newp, newn = {}, {}
     for L in lods:
-        if L.npoints == 0 or L.res > 9e14: continue          # empty and memory LODs stay
+        if L.npoints == 0 or L.res > 9e14 or not ch["shape"]: continue          # empty and memory LODs stay
         Pn = morph(L.points, ch["shape"])
         newp[L.index] = Pn; newn[L.index] = mlod.updated_normals(L, L.points, Pn)
     b = mlod.patch(b, lods, newp, newn)
     name = f"mhfh_{ch['id']}{'_' + style if style else ''}"
-    tex = PREFIX + f"data\\{name}_co.paa"; mat = PREFIX + "data\\mhfh_face.rvmat"
+    tex = PREFIX + f"data\\{tex or name}_co.paa"; mat = PREFIX + "data\\mhfh_face.rvmat"
     if style:                                            # take the bun off the first LOD and hang the hair there
         _, lods2 = mlod.read_bytes(bytes(b)); L = lods2[0]
         bun = L.selections["Bun"][0] > 0; like = int(np.nonzero(bun)[0][0])
@@ -458,16 +510,33 @@ def write_config():
 '''
     # The four Timberwolf faces under names of the same kind. Their own classes (B_female_bun_01..04) stay as they
     # are for everything that uses them, but are taken out of the face lists, so every face shows once.
+    # With the braid they are their own face on their own head (not reshaped), with only the hair changed.
     theirs = ""
-    for n, (who, tac) in enumerate((("Carter", False), ("Carter", True), ("Medrano", False), ("Medrano", True)), 1):
+    heads += f'''    class MHF_Female_Timberwolf_Braid: bun_female_bun_01 {{
+        model = "\\{PREFIX}models\\{fname(TFTW_HEAD, "braid")}.p3d";
+    }};
+'''
+    for n, (o, tac) in enumerate(((o, tac) for o in ORIGINALS for tac in (False, True)), 1):
+        who = o["name"]; t = "_Tactical" if tac else ""
+        both = f'''            mhfh_hairStyles[] = {{"bun", "MHF_Female_{who}_Bun{t}", "braid", "MHF_Female_{who}_Braid{t}"}};
+            {"mhfh_plainFace" if tac else "mhfh_camoFace"} = "MHF_Female_{who}_%s{"" if tac else "_Tactical"}";
+'''
         theirs += f'''        class B_female_bun_0{n}: Default {{
             disabled = 1;
         }};
-        class MHF_Female_{who}_Bun{"_Tactical" if tac else ""}: B_female_bun_0{n} {{
+        class MHF_Female_{who}_Bun{t}: B_female_bun_0{n} {{
             disabled = 0;
             displayName = "{who} (Bun{", Tactical" if tac else ""})";
-            {"mhfh_plainFace" if tac else "mhfh_camoFace"} = "MHF_Female_{who}_Bun{"" if tac else "_Tactical"}";
-        }};
+            mhfh_braidFace = "MHF_Female_{who}_Braid{t}";
+{both % "Bun"}        }};
+        class MHF_Female_{who}_Braid{t}: B_female_bun_0{n} {{
+            author = "Miss Heda";
+            disabled = 0;
+            displayName = "{who} (Braid{", Tactical" if tac else ""})";
+            head = "MHF_Female_Timberwolf_Braid";
+            texture = "{D}{fname(o, "braid", tac)}_co.paa";
+            mhfh_bunFace = "MHF_Female_{who}_Bun{t}";
+{both % "Braid"}        }};
 '''
     cfg = f'''// Generated by tools/characters.py
 class CfgPatches {{
@@ -522,11 +591,18 @@ class CfgFaces {{
 		};
 		skeletonName = "OFP2_ManSkeleton";
 	};
-''' + "".join(f"\tclass mhfh_{c['id']}{'_' + s if s else ''}: ArmaMan {{}};\n" for c in CHARS for s in styles(c)) + "};\n"
+''' + "".join(f"\tclass mhfh_{c['id']}{'_' + s if s else ''}: ArmaMan {{}};\n" for c in CHARS for s in styles(c)) \
+        + f"\tclass mhfh_{TFTW_HEAD['id']}_braid: ArmaMan {{}};\n" + "};\n"
     open(mc, "w", encoding="utf8", newline="\n").write(s)
 
 
 def main():
+    for o in ORIGINALS:
+        for tac in (False, True):
+            save_paa(original_texture(o, tac), f"mhfh_{o['id']}_braid{'_tac' if tac else ''}_co")
+    write_model(TFTW_HEAD, braid="braid", tex=f"mhfh_{ORIGINALS[0]['id']}_braid")
+    write_config()
+    if "originals" in sys.argv[1:]: return               # only the Timberwolf faces
     for c in CHARS:
         for s in styles(c):
             v = "_" + s if s else ""
