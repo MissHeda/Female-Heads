@@ -1,34 +1,18 @@
 # Changelog
 
-## 0.2.0
+## 1.0.0
 
-- New braid: plaited from three strands with hair ties, starting high on the back of the head so it comes out
-  through the opening of a cap.
-- The hair follows the headgear: bun under helmets, braid with caps. What happens without headgear, with
-  listed headgear and with everything else is set per player in the CBA settings. Needs CBA_A3 now.
-- The hair gathered at the start of the braid stands up from the head a little; larger hair tie.
-- The braid hangs closer to head and neck and stays on the back when the head turns.
-- Headgear lists take patterns with * and ?.
-- With ACE3: "Apply camo cream" and "Remove camo cream" in the self interaction menu.
-- One face paint for everyone: Carter and Medrano wear the paint of the other characters on the face, and all
-  ears are painted as on the Timberwolf faces.
-- Classes renamed to `MHF_Female_<Name>_<Style>[_Tactical]`; the bun is named in the display name too, so every
-  style is followed by its Tactical version in the arsenal. The Timberwolf faces are listed the same way.
-- The two Timberwolf faces (Carter, Medrano) come with the braid as well, plain and Tactical, and follow the
-  headgear like the others.
-- With ACE3: "Hair" in the self interaction menu to change the hair style by hand.
-- Hair and camo cream actions together in one ACE menu: Equipment > Face.
-- No more dark streaks on the neck: repaired shadow volume.
-- Arms and legs have the tone of the neck.
-- Eyes keep the brightness of the photographed ones, no more glowing iris.
-- Blonde hair without black strands; face paint no longer touches the hair and sits properly on dark skin.
-- With the braid the hair on the head runs to the start of the braid, not to where the bun was.
-- Clean skin at the hairline of the characters built on the blonde Timberwolf face.
-- Haddad removed.
+First release.
 
-## 0.1.0
-
-- Eight new female characters on the Task Force Timberwolf female head, each with a Tactical (face paint) variant:
-  Kovacs, Reyes, Okoye, Walsh, Lindqvist, Fraser, Novak, Haddad.
-- Own face shape, skin tone, hair, brow and eye colour per character, matching hand textures.
-- Every character with a bun or with a braid.
+- Seven female characters on the Task Force Timberwolf female head: Kovacs, Reyes, Okoye, Kavanagh, Lindqvist,
+  Fraser and Novak. Own face shape, skin tone, hair, brow and eye colour each; arms and legs in the tone of the neck.
+- Every character with a bun and with a braid, each also as a Tactical version with face paint. The braid comes
+  out through the opening of a cap.
+- Carter and Medrano from Timberwolf get the braid too, and the same face paint as the others.
+- The hair follows the headgear: bun under helmets, braid with caps. Set per player in the CBA settings
+  (a server can force them); headgear lists take class names and patterns with * and ?.
+- With ACE3: Equipment > Face in the self interaction menu, with "Hair" to change the style by hand and
+  "Apply camo cream" / "Remove camo cream".
+- Classes named `MHF_Female_<Name>_<Style>[_Tactical]`; Timberwolf's own classes stay but are hidden from the
+  face lists.
+- Repaired shadow of the Timberwolf head: no dark streaks on the neck.

@@ -31,11 +31,11 @@ class CfgHeads {
     class MHF_Female_Okoye_Braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_okoye_braid.p3d";
     };
-    class MHF_Female_Walsh_Bun: bun_female_bun_01 {
-        model = "\z\mhfh\addons\heads\models\mhfh_walsh.p3d";
+    class MHF_Female_Kavanagh_Bun: bun_female_bun_01 {
+        model = "\z\mhfh\addons\heads\models\mhfh_kavanagh.p3d";
     };
-    class MHF_Female_Walsh_Braid: bun_female_bun_01 {
-        model = "\z\mhfh\addons\heads\models\mhfh_walsh_braid.p3d";
+    class MHF_Female_Kavanagh_Braid: bun_female_bun_01 {
+        model = "\z\mhfh\addons\heads\models\mhfh_kavanagh_braid.p3d";
     };
     class MHF_Female_Lindqvist_Bun: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_lindqvist.p3d";
@@ -355,73 +355,73 @@ class CfgFaces {
             mhfh_hairStyles[] = {"bun", "MHF_Female_Okoye_Bun_Tactical", "braid", "MHF_Female_Okoye_Braid_Tactical"};
             mhfh_plainFace = "MHF_Female_Okoye_Braid";
         };
-        class MHF_Female_Walsh_Bun: B_female_bun_01 {
+        class MHF_Female_Kavanagh_Bun: B_female_bun_01 {
             author = "Miss Heda";
             disabled = 0;
-            displayName = "Walsh (Bun)";
-            head = "MHF_Female_Walsh_Bun";
-            texture = "\z\mhfh\addons\heads\data\mhfh_walsh_co.paa";
+            displayName = "Kavanagh (Bun)";
+            head = "MHF_Female_Kavanagh_Bun";
+            texture = "\z\mhfh\addons\heads\data\mhfh_kavanagh_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            textureHL = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            textureHL = "\z\mhfh\addons\heads\data\mhfh_kavanagh_hl_co.paa";
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_kavanagh_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "MHF_Female_Walsh_Braid";
-            mhfh_hairStyles[] = {"bun", "MHF_Female_Walsh_Bun", "braid", "MHF_Female_Walsh_Braid"};
-            mhfh_camoFace = "MHF_Female_Walsh_Bun_Tactical";
+            mhfh_braidFace = "MHF_Female_Kavanagh_Braid";
+            mhfh_hairStyles[] = {"bun", "MHF_Female_Kavanagh_Bun", "braid", "MHF_Female_Kavanagh_Braid"};
+            mhfh_camoFace = "MHF_Female_Kavanagh_Bun_Tactical";
         };
-        class MHF_Female_Walsh_Bun_Tactical: B_female_bun_01 {
+        class MHF_Female_Kavanagh_Bun_Tactical: B_female_bun_01 {
             author = "Miss Heda";
             disabled = 0;
-            displayName = "Walsh (Bun, Tactical)";
-            head = "MHF_Female_Walsh_Bun";
-            texture = "\z\mhfh\addons\heads\data\mhfh_walsh_tac_co.paa";
+            displayName = "Kavanagh (Bun, Tactical)";
+            head = "MHF_Female_Kavanagh_Bun";
+            texture = "\z\mhfh\addons\heads\data\mhfh_kavanagh_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            textureHL = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            textureHL = "\z\mhfh\addons\heads\data\mhfh_kavanagh_hl_co.paa";
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_kavanagh_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_braidFace = "MHF_Female_Walsh_Braid_Tactical";
-            mhfh_hairStyles[] = {"bun", "MHF_Female_Walsh_Bun_Tactical", "braid", "MHF_Female_Walsh_Braid_Tactical"};
-            mhfh_plainFace = "MHF_Female_Walsh_Bun";
+            mhfh_braidFace = "MHF_Female_Kavanagh_Braid_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHF_Female_Kavanagh_Bun_Tactical", "braid", "MHF_Female_Kavanagh_Braid_Tactical"};
+            mhfh_plainFace = "MHF_Female_Kavanagh_Bun";
         };
-        class MHF_Female_Walsh_Braid: B_female_bun_01 {
+        class MHF_Female_Kavanagh_Braid: B_female_bun_01 {
             author = "Miss Heda";
             disabled = 0;
-            displayName = "Walsh (Braid)";
-            head = "MHF_Female_Walsh_Braid";
-            texture = "\z\mhfh\addons\heads\data\mhfh_walsh_braid_co.paa";
+            displayName = "Kavanagh (Braid)";
+            head = "MHF_Female_Kavanagh_Braid";
+            texture = "\z\mhfh\addons\heads\data\mhfh_kavanagh_braid_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            textureHL = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            textureHL = "\z\mhfh\addons\heads\data\mhfh_kavanagh_hl_co.paa";
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_kavanagh_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "MHF_Female_Walsh_Bun";
-            mhfh_hairStyles[] = {"bun", "MHF_Female_Walsh_Bun", "braid", "MHF_Female_Walsh_Braid"};
-            mhfh_camoFace = "MHF_Female_Walsh_Braid_Tactical";
+            mhfh_bunFace = "MHF_Female_Kavanagh_Bun";
+            mhfh_hairStyles[] = {"bun", "MHF_Female_Kavanagh_Bun", "braid", "MHF_Female_Kavanagh_Braid"};
+            mhfh_camoFace = "MHF_Female_Kavanagh_Braid_Tactical";
         };
-        class MHF_Female_Walsh_Braid_Tactical: B_female_bun_01 {
+        class MHF_Female_Kavanagh_Braid_Tactical: B_female_bun_01 {
             author = "Miss Heda";
             disabled = 0;
-            displayName = "Walsh (Braid, Tactical)";
-            head = "MHF_Female_Walsh_Braid";
-            texture = "\z\mhfh\addons\heads\data\mhfh_walsh_braid_tac_co.paa";
+            displayName = "Kavanagh (Braid, Tactical)";
+            head = "MHF_Female_Kavanagh_Braid";
+            texture = "\z\mhfh\addons\heads\data\mhfh_kavanagh_braid_tac_co.paa";
             material = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded1 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
             materialWounded2 = "\z\mhfh\addons\heads\data\mhfh_face.rvmat";
-            textureHL = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            textureHL = "\z\mhfh\addons\heads\data\mhfh_kavanagh_hl_co.paa";
             materialHL = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_walsh_hl_co.paa";
+            textureHL2 = "\z\mhfh\addons\heads\data\mhfh_kavanagh_hl_co.paa";
             materialHL2 = "\z\mhfh\addons\heads\data\mhfh_hl.rvmat";
-            mhfh_bunFace = "MHF_Female_Walsh_Bun_Tactical";
-            mhfh_hairStyles[] = {"bun", "MHF_Female_Walsh_Bun_Tactical", "braid", "MHF_Female_Walsh_Braid_Tactical"};
-            mhfh_plainFace = "MHF_Female_Walsh_Braid";
+            mhfh_bunFace = "MHF_Female_Kavanagh_Bun_Tactical";
+            mhfh_hairStyles[] = {"bun", "MHF_Female_Kavanagh_Bun_Tactical", "braid", "MHF_Female_Kavanagh_Braid_Tactical"};
+            mhfh_plainFace = "MHF_Female_Kavanagh_Braid";
         };
         class MHF_Female_Lindqvist_Bun: B_female_bun_01 {
             author = "Miss Heda";

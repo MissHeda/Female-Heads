@@ -10,7 +10,7 @@ from mathutils import Vector
 REPO = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 O = os.path.join(REPO, "tools", "out"); C = os.path.join(REPO, "tools", "check")
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-IDS = ["kovacs", "reyes", "okoye", "walsh", "lindqvist", "fraser", "novak"]
+IDS = ["kovacs", "reyes", "okoye", "kavanagh", "lindqvist", "fraser", "novak"]
 # "ids=carter,medrano": only these (the Timberwolf faces, which have the braid variants only)
 for a in [a for a in args if a.startswith("ids=")]: IDS = a[4:].split(","); args.remove(a)
 SUFFIXES = args or ["", "_braid"]

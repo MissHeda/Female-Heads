@@ -6,7 +6,7 @@ import os
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__)); O = os.path.join(HERE, "out")
-IDS = ["kovacs", "reyes", "okoye", "walsh", "lindqvist", "fraser", "novak"]
+IDS = ["kovacs", "reyes", "okoye", "kavanagh", "lindqvist", "fraser", "novak"]
 TILES = (("", 0), ("", 1), ("", 2), ("_braid", 2), ("_braid", 3), ("_braid_tac", 1))    # (variant, view)
 S = 512; T = 300
 

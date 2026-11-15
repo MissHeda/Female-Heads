@@ -59,7 +59,7 @@ CHARS = [
          shape=dict(jaw=1.2, chin=-0.8, chin_fwd=0.0, nose_w=0.06, nose_len=-0.4, nose_up=0.0, cheek=1.6, lips=1.2, brow=0.4)),
     dict(id="okoye", name="Okoye", base=1, hair=BLACK, skin=S_DARK, eyes=E_DARK, freckles=0.0,
          shape=dict(jaw=0.6, chin=0.4, chin_fwd=0.8, nose_w=0.12, nose_len=-1.0, nose_up=-0.2, cheek=1.0, lips=2.0, brow=0.6)),
-    dict(id="walsh", name="Walsh", base=1, hair=AUBURN, skin=S_FAIR, eyes=E_GREEN, freckles=0.8,
+    dict(id="kavanagh", name="Kavanagh", base=1, hair=AUBURN, skin=S_FAIR, eyes=E_GREEN, freckles=0.8,
          shape=dict(jaw=-0.8, chin=-1.0, chin_fwd=-0.4, nose_w=-0.04, nose_len=0.2, nose_up=0.8, cheek=0.2, lips=-0.3, brow=-0.3)),
     dict(id="lindqvist", name="Lindqvist", base=3, hair=PLATINUM, skin=S_PALE, eyes=E_BLUE, freckles=0.0,
          shape=dict(jaw=-1.4, chin=0.6, chin_fwd=0.2, nose_w=-0.08, nose_len=0.6, nose_up=0.6, cheek=1.4, lips=0.2, brow=0.0)),

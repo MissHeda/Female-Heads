@@ -9,20 +9,20 @@ That mod has to be loaded: normal and ambient maps and the base classes come fro
 ## Faces
 
 Every character comes with a bun or a braid, each also as a Tactical version with face paint. The classes are
-named `MHF_Female_<Name>_<Style>` and `MHF_Female_<Name>_<Style>_Tactical`, for example `MHF_Female_Walsh_Bun`,
-`MHF_Female_Walsh_Braid_Tactical`. In the arsenal every style is followed by its Tactical version.
+named `MHF_Female_<Name>_<Style>` and `MHF_Female_<Name>_<Style>_Tactical`, for example `MHF_Female_Kavanagh_Bun`,
+`MHF_Female_Kavanagh_Braid_Tactical`. In the arsenal every style is followed by its Tactical version.
 
 | Name | Look |
 |---|---|
 | Kovacs | black hair, pale skin, grey eyes |
 | Reyes | dark brown hair, tan skin, brown eyes |
 | Okoye | black hair, dark skin, dark eyes |
-| Walsh | auburn hair, fair skin, freckles, green eyes |
+| Kavanagh | auburn hair, fair skin, freckles, green eyes |
 | Lindqvist | platinum blonde, pale skin, blue eyes |
 | Fraser | ginger hair, fair skin, freckles, green eyes |
 | Novak | light brown hair, hazel eyes |
 
-Pick them in the Arsenal (Face) or with `player setFace "MHF_Female_Walsh_Bun"`.
+Pick them in the Arsenal (Face) or with `player setFace "MHF_Female_Kavanagh_Bun"`.
 
 The four Timberwolf faces are listed under names of the same kind (`MHF_Female_Carter_Bun`,
 `MHF_Female_Carter_Bun_Tactical`, `MHF_Female_Medrano_Bun`, `MHF_Female_Medrano_Bun_Tactical`). Their own classes
