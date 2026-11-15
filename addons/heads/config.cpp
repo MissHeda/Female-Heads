@@ -55,8 +55,14 @@ class CfgHeads {
     class MHF_Female_Novak_Braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_novak_braid.p3d";
     };
-    class MHF_Female_Timberwolf_Braid: bun_female_bun_01 {
-        model = "\z\mhfh\addons\heads\models\mhfh_tftw_braid.p3d";
+    class MHF_Female_Carter_Braid: bun_female_bun_01 {
+        model = "\z\mhfh\addons\heads\models\mhfh_carter_braid.p3d";
+    };
+    class MHF_Female_Medrano_Braid: bun_female_bun_01 {
+        model = "\z\mhfh\addons\heads\models\mhfh_medrano_braid.p3d";
+    };
+    class MHF_Female_Medrano_Braid_Tactical: bun_female_bun_01 {
+        model = "\z\mhfh\addons\heads\models\mhfh_medrano_braid_tac.p3d";
     };
 };
 
@@ -78,7 +84,7 @@ class CfgFaces {
             author = "Miss Heda";
             disabled = 0;
             displayName = "Carter (Braid)";
-            head = "MHF_Female_Timberwolf_Braid";
+            head = "MHF_Female_Carter_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_carter_braid_co.paa";
             mhfh_bunFace = "MHF_Female_Carter_Bun";
             mhfh_hairStyles[] = {"bun", "MHF_Female_Carter_Bun", "braid", "MHF_Female_Carter_Braid"};
@@ -98,7 +104,7 @@ class CfgFaces {
             author = "Miss Heda";
             disabled = 0;
             displayName = "Carter (Braid, Tactical)";
-            head = "MHF_Female_Timberwolf_Braid";
+            head = "MHF_Female_Carter_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_carter_braid_tac_co.paa";
             mhfh_bunFace = "MHF_Female_Carter_Bun_Tactical";
             mhfh_hairStyles[] = {"bun", "MHF_Female_Carter_Bun_Tactical", "braid", "MHF_Female_Carter_Braid_Tactical"};
@@ -118,7 +124,7 @@ class CfgFaces {
             author = "Miss Heda";
             disabled = 0;
             displayName = "Medrano (Braid)";
-            head = "MHF_Female_Timberwolf_Braid";
+            head = "MHF_Female_Medrano_Braid";
             texture = "\z\mhfh\addons\heads\data\mhfh_medrano_braid_co.paa";
             mhfh_bunFace = "MHF_Female_Medrano_Bun";
             mhfh_hairStyles[] = {"bun", "MHF_Female_Medrano_Bun", "braid", "MHF_Female_Medrano_Braid"};
@@ -138,7 +144,7 @@ class CfgFaces {
             author = "Miss Heda";
             disabled = 0;
             displayName = "Medrano (Braid, Tactical)";
-            head = "MHF_Female_Timberwolf_Braid";
+            head = "MHF_Female_Medrano_Braid_Tactical";
             texture = "\z\mhfh\addons\heads\data\mhfh_medrano_braid_tac_co.paa";
             mhfh_bunFace = "MHF_Female_Medrano_Bun_Tactical";
             mhfh_hairStyles[] = {"bun", "MHF_Female_Medrano_Bun_Tactical", "braid", "MHF_Female_Medrano_Braid_Tactical"};

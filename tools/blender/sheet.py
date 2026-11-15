@@ -11,7 +11,7 @@ REPO = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 O = os.path.join(REPO, "tools", "out"); C = os.path.join(REPO, "tools", "check")
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 IDS = ["kovacs", "reyes", "okoye", "walsh", "lindqvist", "fraser", "novak"]
-# "ids=carter,medrano": only these (the Timberwolf faces share one model, mhfh_tftw_braid)
+# "ids=carter,medrano": only these (the Timberwolf faces, which have the braid variants only)
 for a in [a for a in args if a.startswith("ids=")]: IDS = a[4:].split(","); args.remove(a)
 SUFFIXES = args or ["", "_braid"]
 RES = 512; VIEWS = ((0, 0), (40, 5), (95, 0), (165, 8))
@@ -31,7 +31,6 @@ for suffix in SUFFIXES:
     model_suffix = suffix.replace("_tac", "")
     for cid in IDS:
         npz = os.path.join(C, f"mhfh_{cid}{model_suffix}.npz")
-        if not os.path.exists(npz): npz = os.path.join(C, f"mhfh_tftw{model_suffix}.npz")
         d = np.load(npz); P, F, uv = d["P"], d["F"], d["uv"]
         me = bpy.data.meshes.new("head")
         me.from_pydata([(p[0], p[2], p[1]) for p in P], [], [tuple(int(i) for i in f[::-1]) for f in F]); me.update()

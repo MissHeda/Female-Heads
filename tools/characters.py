@@ -314,7 +314,19 @@ def face_texture(ch, tactical=False, braid=False):
 # ------------------------------------------------------------------ the Timberwolf faces with the braid
 # Carter and Medrano themselves: their head and their texture as they are, with the braid instead of the bun.
 ORIGINALS = [dict(id="carter", name="Carter", base=1), dict(id="medrano", name="Medrano", base=3)]
-TFTW_HEAD = dict(id="tftw", shape=None)                 # one model for both: the head is not reshaped
+# Eyes and braid (like their bun) are not part of the face a face texture is put on: they show the texture the
+# model names. So, as in their mod, there is a model for Carter (plain and painted: her eyes and hair are the
+# same), one for Medrano and one for Medrano painted (her painted texture has another tone all over).
+ORIGINAL_HEADS = [("carter", False), ("medrano", False), ("medrano", True)]
+
+
+def original_head(o, tac):
+    """file name (without extension) of the model a Timberwolf face wears with the braid"""
+    return f"mhfh_{o['id']}_braid{'_tac' if tac and (o['id'], True) in ORIGINAL_HEADS else ''}"
+
+
+def original_head_class(o, tac):
+    return f"MHF_Female_{o['name']}_Braid{'_Tactical' if original_head(o, tac).endswith('_tac') else ''}"
 _MO = {}
 
 
@@ -403,8 +415,8 @@ def morph(P, s):
 _SRC = []
 
 
-def write_model(ch, braid=False, tex=None):
-    """tex: name of the texture file the model names, where it is not the model's own"""
+def write_model(ch, braid=False, name=None):
+    """name: file name of the model and of the texture it names, where it is not the character's"""
     style = "braid" if braid is True else (braid or "")
     if not _SRC: _SRC.append(bytes(shadow.fix(open(SRC_P3D, "rb").read(), verbose=True)))
     b, lods = mlod.read_bytes(_SRC[0])
@@ -414,8 +426,8 @@ def write_model(ch, braid=False, tex=None):
         Pn = morph(L.points, ch["shape"])
         newp[L.index] = Pn; newn[L.index] = mlod.updated_normals(L, L.points, Pn)
     b = mlod.patch(b, lods, newp, newn)
-    name = f"mhfh_{ch['id']}{'_' + style if style else ''}"
-    tex = PREFIX + f"data\\{tex or name}_co.paa"; mat = PREFIX + "data\\mhfh_face.rvmat"
+    name = name or f"mhfh_{ch['id']}{'_' + style if style else ''}"
+    tex = PREFIX + f"data\\{name}_co.paa"; mat = PREFIX + "data\\mhfh_face.rvmat"
     if style:                                            # take the bun off the first LOD and hang the hair there
         _, lods2 = mlod.read_bytes(bytes(b)); L = lods2[0]
         bun = L.selections["Bun"][0] > 0; like = int(np.nonzero(bun)[0][0])
@@ -512,10 +524,11 @@ def write_config():
     # are for everything that uses them, but are taken out of the face lists, so every face shows once.
     # With the braid they are their own face on their own head (not reshaped), with only the hair changed.
     theirs = ""
-    heads += f'''    class MHF_Female_Timberwolf_Braid: bun_female_bun_01 {{
-        model = "\\{PREFIX}models\\{fname(TFTW_HEAD, "braid")}.p3d";
+    by_id = {o["id"]: o for o in ORIGINALS}
+    heads += "".join(f'''    class {original_head_class(by_id[i], t)}: bun_female_bun_01 {{
+        model = "\\{PREFIX}models\\{original_head(by_id[i], t)}.p3d";
     }};
-'''
+''' for i, t in ORIGINAL_HEADS)
     for n, (o, tac) in enumerate(((o, tac) for o in ORIGINALS for tac in (False, True)), 1):
         who = o["name"]; t = "_Tactical" if tac else ""
         both = f'''            mhfh_hairStyles[] = {{"bun", "MHF_Female_{who}_Bun{t}", "braid", "MHF_Female_{who}_Braid{t}"}};
@@ -533,7 +546,7 @@ def write_config():
             author = "Miss Heda";
             disabled = 0;
             displayName = "{who} (Braid{", Tactical" if tac else ""})";
-            head = "MHF_Female_Timberwolf_Braid";
+            head = "{original_head_class(o, tac)}";
             texture = "{D}{fname(o, "braid", tac)}_co.paa";
             mhfh_bunFace = "MHF_Female_{who}_Bun{t}";
 {both % "Braid"}        }};
@@ -592,7 +605,7 @@ class CfgFaces {{
 		skeletonName = "OFP2_ManSkeleton";
 	};
 ''' + "".join(f"\tclass mhfh_{c['id']}{'_' + s if s else ''}: ArmaMan {{}};\n" for c in CHARS for s in styles(c)) \
-        + f"\tclass mhfh_{TFTW_HEAD['id']}_braid: ArmaMan {{}};\n" + "};\n"
+        + "".join(f"\tclass {original_head(by_id[i], t)}: ArmaMan {{}};\n" for i, t in ORIGINAL_HEADS) + "};\n"
     open(mc, "w", encoding="utf8", newline="\n").write(s)
 
 
@@ -600,7 +613,8 @@ def main():
     for o in ORIGINALS:
         for tac in (False, True):
             save_paa(original_texture(o, tac), f"mhfh_{o['id']}_braid{'_tac' if tac else ''}_co")
-    write_model(TFTW_HEAD, braid="braid", tex=f"mhfh_{ORIGINALS[0]['id']}_braid")
+    for i, t in ORIGINAL_HEADS:                          # their head, not reshaped
+        o = next(o for o in ORIGINALS if o["id"] == i); write_model(dict(o, shape=None), braid="braid", name=original_head(o, t))
     write_config()
     if "originals" in sys.argv[1:]: return               # only the Timberwolf faces
     for c in CHARS:

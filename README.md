@@ -94,7 +94,9 @@ repository). `tools/characters.py` then writes everything in `addons/heads`:
   hangs from there, as a real one does. When the head nods it tilts along, which the share of the neck softens.
 - **Timberwolf faces with the braid:** `original_texture` takes their texture as it is (plain or painted) and
   changes only the hair at the back of the head; the changed hair gets the colour their own hair has at every
-  brightness. `python tools/characters.py originals` writes only these.
+  brightness. Eyes and braid are not covered by the face texture, they show the texture the model names. So,
+  as in their mod, there are three models: Carter, Medrano and Medrano painted.
+  `python tools/characters.py originals` writes only these.
 - **Shadow:** `tools/shadow.py` repairs the shadow volume of the Timberwolf head, which throws dark streaks on
   the neck: three triangles that exist twice are removed, the points below the jaw get the bone weights of the
   visible surface next to them, and points outside the visible surface are moved inside.
