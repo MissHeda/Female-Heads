@@ -1,9 +1,5 @@
 # Changelog
 
-## 1.0.1
-
-- Fixed: the mouth did not move when a character talks (heads were built with their own skeleton).
-
 ## 1.0.0
 
 First release.
