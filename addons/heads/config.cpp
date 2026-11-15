@@ -58,8 +58,14 @@ class CfgHeads {
     class MHF_Female_Carter_Braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_carter_braid.p3d";
     };
+    class MHF_Female_Carter_Bun: bun_female_bun_01 {
+        model = "\z\mhfh\addons\heads\models\mhfh_carter.p3d";
+    };
     class MHF_Female_Medrano_Braid: bun_female_bun_01 {
         model = "\z\mhfh\addons\heads\models\mhfh_medrano_braid.p3d";
+    };
+    class MHF_Female_Medrano_Bun: bun_female_bun_01 {
+        model = "\z\mhfh\addons\heads\models\mhfh_medrano.p3d";
     };
 };
 
@@ -82,6 +88,7 @@ class CfgFaces {
         class MHF_Female_Carter_Bun: B_female_bun_01 {
             disabled = 0;
             displayName = "Carter (Bun)";
+            head = "MHF_Female_Carter_Bun";
             mhfh_braidFace = "MHF_Female_Carter_Braid";
             mhfh_hairStyles[] = {"bun", "MHF_Female_Carter_Bun", "braid", "MHF_Female_Carter_Braid"};
             mhfh_camoFace = "MHF_Female_Carter_Bun_Tactical";
@@ -99,6 +106,7 @@ class CfgFaces {
         class MHF_Female_Carter_Bun_Tactical: B_female_bun_01 {
             disabled = 0;
             displayName = "Carter (Bun, Tactical)";
+            head = "MHF_Female_Carter_Bun";
             author = "Miss Heda";
             texture = "\z\mhfh\addons\heads\data\mhfh_carter_tac_co.paa";
             mhfh_braidFace = "MHF_Female_Carter_Braid_Tactical";
@@ -118,6 +126,7 @@ class CfgFaces {
         class MHF_Female_Medrano_Bun: B_female_bun_03 {
             disabled = 0;
             displayName = "Medrano (Bun)";
+            head = "MHF_Female_Medrano_Bun";
             mhfh_braidFace = "MHF_Female_Medrano_Braid";
             mhfh_hairStyles[] = {"bun", "MHF_Female_Medrano_Bun", "braid", "MHF_Female_Medrano_Braid"};
             mhfh_camoFace = "MHF_Female_Medrano_Bun_Tactical";
@@ -135,6 +144,7 @@ class CfgFaces {
         class MHF_Female_Medrano_Bun_Tactical: B_female_bun_03 {
             disabled = 0;
             displayName = "Medrano (Bun, Tactical)";
+            head = "MHF_Female_Medrano_Bun";
             author = "Miss Heda";
             texture = "\z\mhfh\addons\heads\data\mhfh_medrano_tac_co.paa";
             mhfh_braidFace = "MHF_Female_Medrano_Braid_Tactical";

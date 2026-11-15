@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- The mouth now moves clearly when a character talks (it barely moved before, like on the Timberwolf head).
+  Carter and Medrano with the bun get this too.
+
 ## 1.0.0
 
 First release.

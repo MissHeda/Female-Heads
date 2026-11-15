@@ -15,7 +15,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import mlod, tftw_masks, braid as braidlib, shadow
+import mlod, tftw_masks, braid as braidlib, shadow, lipboost
 from tftw_masks import smooth, blur, blurf, N
 
 ROOT = os.path.join(HERE, ".."); DATA = os.path.join(ROOT, "addons", "heads", "data"); MODELS = os.path.join(ROOT, "addons", "heads", "models")
@@ -324,6 +324,14 @@ def original_head_class(o):
     return f"MHF_Female_{o['name']}_Braid"
 
 
+def write_original_bun(o):
+    """their own bun head with the stronger mouth movement (lipboost), otherwise unchanged"""
+    n = "" if o["base"] == 1 else f"_{o['base']}"
+    src = os.path.join(os.path.dirname(SRC_P3D), f"female_head_bun{n}.p3d")
+    b = lipboost.boost(bytes(shadow.fix(open(src, "rb").read())))
+    open(os.path.join(MODELS, f"mhfh_{o['id']}.p3d"), "wb").write(b)
+
+
 _MO = {}
 
 
@@ -426,7 +434,7 @@ _SRC = []
 def write_model(ch, braid=False, name=None):
     """name: file name of the model and of the texture it names, where it is not the character's"""
     style = "braid" if braid is True else (braid or "")
-    if not _SRC: _SRC.append(bytes(shadow.fix(open(SRC_P3D, "rb").read(), verbose=True)))
+    if not _SRC: _SRC.append(lipboost.boost(bytes(shadow.fix(open(SRC_P3D, "rb").read(), verbose=True))))
     b, lods = mlod.read_bytes(_SRC[0])
     newp, newn = {}, {}
     for L in lods:
@@ -537,6 +545,9 @@ def write_config():
     heads += "".join(f'''    class {original_head_class(by_id[i])}: bun_female_bun_01 {{
         model = "\\{PREFIX}models\\{original_head(by_id[i])}.p3d";
     }};
+    class MHF_Female_{by_id[i]["name"]}_Bun: bun_female_bun_01 {{
+        model = "\\{PREFIX}models\\mhfh_{i}.p3d";
+    }};
 ''' for i in ORIGINAL_HEADS)
     theirs = "".join(f'''        class B_female_bun_0{n}: Default {{
             disabled = 1;
@@ -552,6 +563,7 @@ def write_config():
             theirs += f'''        class MHF_Female_{who}_Bun{t}: B_female_bun_0{o["base"]} {{
             disabled = 0;
             displayName = "{who} (Bun{", Tactical" if tac else ""})";
+            head = "MHF_Female_{who}_Bun";
 {bun_tex}            mhfh_braidFace = "MHF_Female_{who}_Braid{t}";
 {both % "Bun"}        }};
         class MHF_Female_{who}_Braid{t}: B_female_bun_0{o["base"]} {{
@@ -617,7 +629,7 @@ class CfgFaces {{
 		skeletonName = "OFP2_ManSkeleton";
 	};
 ''' + "".join(f"\tclass mhfh_{c['id']}{'_' + s if s else ''}: ArmaMan {{}};\n" for c in CHARS for s in styles(c)) \
-        + "".join(f"\tclass {original_head(by_id[i])}: ArmaMan {{}};\n" for i in ORIGINAL_HEADS) + "};\n"
+        + "".join(f"\tclass {original_head(by_id[i])}: ArmaMan {{}};\n\tclass mhfh_{i}: ArmaMan {{}};\n" for i in ORIGINAL_HEADS) + "};\n"
     open(mc, "w", encoding="utf8", newline="\n").write(s)
 
 
@@ -627,6 +639,7 @@ def main():
             save_paa(original_texture(o, tac), f"mhfh_{o['id']}_braid{'_tac' if tac else ''}_co")
         save_paa(original_texture(o, True, braid=False), f"mhfh_{o['id']}_tac_co")   # their bun, painted like the others
         write_model(dict(o, shape=None), braid="braid", name=original_head(o))      # their head, not reshaped
+        write_original_bun(o)
     write_config()
     if "originals" in sys.argv[1:]: return               # only the Timberwolf faces
     for c in CHARS:
