@@ -10,7 +10,8 @@
 - The braid hangs closer to head and neck and stays on the back when the head turns.
 - Headgear lists take patterns with * and ?.
 - With ACE3: "Apply camo cream" and "Remove camo cream" in the self interaction menu.
-- Face paint thins out around the ears instead of stopping at them.
+- One face paint for everyone: Carter and Medrano wear the paint of the other characters on the face, and all
+  ears are painted as on the Timberwolf faces.
 - Classes renamed to `MHF_Female_<Name>_<Style>[_Tactical]`; the bun is named in the display name too, so every
   style is followed by its Tactical version in the arsenal. The Timberwolf faces are listed the same way.
 - The two Timberwolf faces (Carter, Medrano) come with the braid as well, plain and Tactical, and follow the

@@ -29,6 +29,8 @@ The four Timberwolf faces are listed under names of the same kind (`MHF_Female_C
 `B_female_bun_01` to `04` still work for everything that uses them, but are hidden from the face lists so every
 face shows once. Both also come with the braid (`MHF_Female_Carter_Braid`, `MHF_Female_Medrano_Braid`, each also
 `_Tactical`): their own head and texture, in which only the hair at the back of the head runs to the braid.
+Their Tactical versions wear the same face paint as the other characters; the Timberwolf paint as it was stays
+on `B_female_bun_02` and `04`.
 
 ## Braid and headgear
 
@@ -92,10 +94,11 @@ repository). `tools/characters.py` then writes everything in `addons/heads`:
   someone standing upright. It belongs to the head for most of its weight (all of it at the tie, 60 % at the
   tip, the rest to the neck): when the head turns, its root swings round with the back of the head and the braid
   hangs from there, as a real one does. When the head nods it tilts along, which the share of the neck softens.
-- **Timberwolf faces with the braid:** `original_texture` takes their texture as it is (plain or painted) and
-  changes only the hair at the back of the head; the changed hair gets the colour their own hair has at every
-  brightness. Eyes and braid are not covered by the face texture, they show the texture the model names. So,
-  as in their mod, there are three models: Carter, Medrano and Medrano painted.
+- **Timberwolf faces with the braid:** `original_texture` takes their plain texture as it is and changes only
+  the hair at the back of the head; the changed hair gets the colour their own hair has at every brightness.
+  The Tactical versions (bun and braid) are that texture with the face paint of the other characters over it.
+  Eyes and braid are not covered by the face texture, they show the texture the model names. So Carter and
+  Medrano each have their own braid model.
   `python tools/characters.py originals` writes only these.
 - **Shadow:** `tools/shadow.py` repairs the shadow volume of the Timberwolf head, which throws dark streaks on
   the neck: three triangles that exist twice are removed, the points below the jaw get the bone weights of the

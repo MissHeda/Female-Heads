@@ -120,7 +120,7 @@ def paint_layer(m):
     rest = rest * smooth(0.3, 0.7, a)[..., None]
     print(f"face paint: olive {olive.round(3)}, black {black.round(3)}, not explained {float(np.abs(rest[strong]).mean()):.3f}")
     # Two changes to their pattern. The upper forehead is nearly bare on one side and dabbed thinly on the other,
-    # which reads as a pale mottled patch: it is covered with olive, as strokes running the way theirs do. And the ears carry a lot of paint: nearly half of it comes off.
+    # which reads as a pale mottled patch: it is covered with olive, as strokes running the way theirs do.
     pos = m["pos"]; x, y, z = pos[..., 0], pos[..., 1], pos[..., 2]
     thick = (a > 0.85) & m["cov"]; l = paint @ np.array([0.30, 0.59, 0.11])
     olive_thick = np.median(paint[thick & (l > np.percentile(l[thick], 55))], 0)
@@ -135,12 +135,7 @@ def paint_layer(m):
     paint = lerp(paint, np.clip(colour, 0, 1), np.maximum(more, np.clip((more - a) / np.maximum(more, 1e-3), 0, 1)) * (more > 0))   # over their pale dabs too
     a = np.maximum(a, more)
     rest = rest * (1 - more)[..., None]
-    # The ears: nearly bare, but not cut out. Paint thins out towards each ear over the skin around it and goes on
-    # for a bit onto the ear itself, with a ragged edge, as it does when it is put on with the fingers. The ears
-    # have their own corner of the texture; the distance is taken on the head, so the edge runs across that seam.
-    ear_at = np.stack([np.sign(x) * 0.074, np.full(x.shape, 0.684), np.full(x.shape, 0.004)], -1)
-    far = np.linalg.norm((pos - ear_at) * np.array([1.0, 0.75, 1.0]), axis=-1) + 0.006 * sine_noise(pos, 300.0, 12, 8, (0.6, 1.6))
-    a = a * smooth(0.014, 0.031, far)
+    # (The ears keep their paint as it is on the Timberwolf faces.)
     # It ends before the hair begins, with a ragged edge: paint right up to the hairline all the way round looks
     # like a mask.
     a = a * smooth(0.30, 0.05, blurf(m["hair"], 16) + 0.09 * sine_noise(pos, 260.0, 9, 8, (0.6, 1.6)))
@@ -315,29 +310,42 @@ def face_texture(ch, tactical=False, braid=False):
 # Carter and Medrano themselves: their head and their texture as they are, with the braid instead of the bun.
 ORIGINALS = [dict(id="carter", name="Carter", base=1), dict(id="medrano", name="Medrano", base=3)]
 # Eyes and braid (like their bun) are not part of the face a face texture is put on: they show the texture the
-# model names. So, as in their mod, there is a model for Carter (plain and painted: her eyes and hair are the
-# same), one for Medrano and one for Medrano painted (her painted texture has another tone all over).
-ORIGINAL_HEADS = [("carter", False), ("medrano", False), ("medrano", True)]
+# model names. So each of the two has her own model. It serves plain and painted: the paint is laid over her
+# plain texture, so eyes and hair are the same in both.
+ORIGINAL_HEADS = ["carter", "medrano"]
 
 
-def original_head(o, tac):
+def original_head(o):
     """file name (without extension) of the model a Timberwolf face wears with the braid"""
-    return f"mhfh_{o['id']}_braid{'_tac' if tac and (o['id'], True) in ORIGINAL_HEADS else ''}"
+    return f"mhfh_{o['id']}_braid"
 
 
-def original_head_class(o, tac):
-    return f"MHF_Female_{o['name']}_Braid{'_Tactical' if original_head(o, tac).endswith('_tac') else ''}"
+def original_head_class(o):
+    return f"MHF_Female_{o['name']}_Braid"
+
+
 _MO = {}
 
 
-def original_texture(o, tactical=False):
-    """A Timberwolf face for the braid: their texture (plain or painted), in which only the hair at the back of
-    the head is changed, so the face is the same as with their bun. The hair runs to the start of the braid
-    (hair_to_braid) and keeps its own colour: the colour their hair has at every brightness is measured and the
-    changed hair is given that. The braid's strands go where the texture of the bun was, as light as the bun."""
+def painted(base, out):
+    """The face paint all characters wear (paint_layer) over a Timberwolf face's own texture. It is the very
+    layer of the characters built on that face, hairline included: the mask of Medrano's own blonde hair takes
+    her ears and upper forehead for hair as well and would leave them bare."""
+    m = masks(base); a, paint, rest = paint_layer(m)
+    return lerp(out, np.clip(paint + rest, 0, 1), a * (1 - m["hair"]))
+
+
+def original_texture(o, tactical=False, braid=True):
+    """A Timberwolf face: their plain texture, with the face paint of the other characters where asked for.
+    braid: only the hair at the back of the head is changed, so the face is the same as with their bun. The
+    hair runs to the start of the braid (hair_to_braid) and keeps its own colour: the colour their hair has at
+    every brightness is measured and the changed hair is given that. The braid's strands go where the texture of
+    the bun was, as light as the bun."""
     base = o["base"]
-    if base not in _MO: _MO[base] = masks(1) if base == 1 else tftw_masks.build(f"face_0{base}", own_hair=True)
-    m = _MO[base]; tex = tftw_masks.load(f"face_0{base + (1 if tactical else 0)}"); hlum = tex @ LUMW
+    if base not in _MO:
+        _MO[base] = masks(1) if base == 1 else tftw_masks.build(f"face_0{base}", own_hair=True)
+    m = _MO[base]; tex = tftw_masks.load(f"face_0{base}"); hlum = tex @ LUMW
+    if not braid: return np.clip(painted(base, tex) if tactical else tex, 0, 1)
     pos = m["pos"]; y, z = pos[..., 1], pos[..., 2]; hair = m["hair"]
     ref = m["cov"] & ~m["bun"] & (hair > 0.9) & (z > 0.02) & (y > 0.66)
     l = hlum[ref]; px = tex[ref]; mid, hue = [], []
@@ -368,7 +376,7 @@ def original_texture(o, tactical=False):
         out[y0 - 3:y1 + 3, x0 - 3:x0] = out[y0 - 3:y1 + 3, x0:x0 + 1]; out[y0 - 3:y1 + 3, x1:x1 + 3] = out[y0 - 3:y1 + 3, x1 - 1:x1]
     x0, x1, y0, y1 = tie
     out[y0 - 3:y1 + 3, x0 - 3:x1 + 3] = np.array([0.050, 0.046, 0.050]) + np.random.default_rng(2).normal(0, 0.006, (y1 - y0 + 6, x1 - x0 + 6, 1))
-    return np.clip(out, 0, 1)
+    return np.clip(painted(base, out) if tactical else out, 0, 1)
 
 
 def hands_texture(ch, skinfit):
@@ -523,30 +531,34 @@ def write_config():
     # The four Timberwolf faces under names of the same kind. Their own classes (B_female_bun_01..04) stay as they
     # are for everything that uses them, but are taken out of the face lists, so every face shows once.
     # With the braid they are their own face on their own head (not reshaped), with only the hair changed.
-    theirs = ""
+    # Their Tactical versions wear the face paint of the other characters, laid over their plain face: so they
+    # come from their plain class (its head, arms and legs) with another texture.
     by_id = {o["id"]: o for o in ORIGINALS}
-    heads += "".join(f'''    class {original_head_class(by_id[i], t)}: bun_female_bun_01 {{
-        model = "\\{PREFIX}models\\{original_head(by_id[i], t)}.p3d";
+    heads += "".join(f'''    class {original_head_class(by_id[i])}: bun_female_bun_01 {{
+        model = "\\{PREFIX}models\\{original_head(by_id[i])}.p3d";
     }};
-''' for i, t in ORIGINAL_HEADS)
-    for n, (o, tac) in enumerate(((o, tac) for o in ORIGINALS for tac in (False, True)), 1):
-        who = o["name"]; t = "_Tactical" if tac else ""
-        both = f'''            mhfh_hairStyles[] = {{"bun", "MHF_Female_{who}_Bun{t}", "braid", "MHF_Female_{who}_Braid{t}"}};
-            {"mhfh_plainFace" if tac else "mhfh_camoFace"} = "MHF_Female_{who}_%s{"" if tac else "_Tactical"}";
-'''
-        theirs += f'''        class B_female_bun_0{n}: Default {{
+''' for i in ORIGINAL_HEADS)
+    theirs = "".join(f'''        class B_female_bun_0{n}: Default {{
             disabled = 1;
         }};
-        class MHF_Female_{who}_Bun{t}: B_female_bun_0{n} {{
+''' for n in range(1, 5))
+    for o in ORIGINALS:
+        for tac in (False, True):
+            who = o["name"]; t = "_Tactical" if tac else ""
+            both = f'''            mhfh_hairStyles[] = {{"bun", "MHF_Female_{who}_Bun{t}", "braid", "MHF_Female_{who}_Braid{t}"}};
+            {"mhfh_plainFace" if tac else "mhfh_camoFace"} = "MHF_Female_{who}_%s{"" if tac else "_Tactical"}";
+'''
+            bun_tex = f'            author = "Miss Heda";\n            texture = "{D}{fname(o, "", True)}_co.paa";\n' if tac else ""
+            theirs += f'''        class MHF_Female_{who}_Bun{t}: B_female_bun_0{o["base"]} {{
             disabled = 0;
             displayName = "{who} (Bun{", Tactical" if tac else ""})";
-            mhfh_braidFace = "MHF_Female_{who}_Braid{t}";
+{bun_tex}            mhfh_braidFace = "MHF_Female_{who}_Braid{t}";
 {both % "Bun"}        }};
-        class MHF_Female_{who}_Braid{t}: B_female_bun_0{n} {{
+        class MHF_Female_{who}_Braid{t}: B_female_bun_0{o["base"]} {{
             author = "Miss Heda";
             disabled = 0;
             displayName = "{who} (Braid{", Tactical" if tac else ""})";
-            head = "{original_head_class(o, tac)}";
+            head = "{original_head_class(o)}";
             texture = "{D}{fname(o, "braid", tac)}_co.paa";
             mhfh_bunFace = "MHF_Female_{who}_Bun{t}";
 {both % "Braid"}        }};
@@ -605,7 +617,7 @@ class CfgFaces {{
 		skeletonName = "OFP2_ManSkeleton";
 	};
 ''' + "".join(f"\tclass mhfh_{c['id']}{'_' + s if s else ''}: ArmaMan {{}};\n" for c in CHARS for s in styles(c)) \
-        + "".join(f"\tclass {original_head(by_id[i], t)}: ArmaMan {{}};\n" for i, t in ORIGINAL_HEADS) + "};\n"
+        + "".join(f"\tclass {original_head(by_id[i])}: ArmaMan {{}};\n" for i in ORIGINAL_HEADS) + "};\n"
     open(mc, "w", encoding="utf8", newline="\n").write(s)
 
 
@@ -613,8 +625,8 @@ def main():
     for o in ORIGINALS:
         for tac in (False, True):
             save_paa(original_texture(o, tac), f"mhfh_{o['id']}_braid{'_tac' if tac else ''}_co")
-    for i, t in ORIGINAL_HEADS:                          # their head, not reshaped
-        o = next(o for o in ORIGINALS if o["id"] == i); write_model(dict(o, shape=None), braid="braid", name=original_head(o, t))
+        save_paa(original_texture(o, True, braid=False), f"mhfh_{o['id']}_tac_co")   # their bun, painted like the others
+        write_model(dict(o, shape=None), braid="braid", name=original_head(o))      # their head, not reshaped
     write_config()
     if "originals" in sys.argv[1:]: return               # only the Timberwolf faces
     for c in CHARS:
