@@ -329,7 +329,13 @@ def write_original_bun(o):
     n = "" if o["base"] == 1 else f"_{o['base']}"
     src = os.path.join(os.path.dirname(SRC_P3D), f"female_head_bun{n}.p3d")
     b = lipboost.boost(bytes(shadow.fix(open(src, "rb").read())))
-    open(os.path.join(MODELS, f"mhfh_{o['id']}.p3d"), "wb").write(b)
+    # the model names our copy of their plain face and our material (the faces in the config set theirs anyway),
+    # so it only names files of this mod
+    save_paa(original_texture(o, braid=False), f"mhfh_{o['id']}_co")
+    tex = PREFIX + f"data\\mhfh_{o['id']}_co.paa"; mat = PREFIX + "data\\mhfh_face.rvmat"
+    _, lods = mlod.read_bytes(b)
+    b = mlod.rewrite_face_paths(bytearray(b), lods, lambda s: (tex if s.lower().endswith(".paa") else mat if s.lower().endswith(".rvmat") else s))
+    open(os.path.join(MODELS, f"mhfh_{o['id']}.p3d"), "wb").write(bytes(b))
 
 
 _MO = {}
