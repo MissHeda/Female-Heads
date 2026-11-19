@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2
+
+- Task Force Timberwolf Female Characters is no longer required: everything the heads need is in this mod.
+  Fixes "Addon 'mhfh_heads' requires addon 'female3_ICEMAN'" when Timberwolf is not loaded.
+- With Timberwolf loaded as well, its own faces are still hidden from the face lists.
+
 ## 1.0.1
 
 - The mouth now moves clearly when a character talks (it barely moved before, like on the Timberwolf head).

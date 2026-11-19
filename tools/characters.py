@@ -489,14 +489,14 @@ VertexShaderID = "Super";
         pos[] = {{0, 0, 0}};
     }};
 }};
-''' for n, t, e in ((1, "A3_female_heads\\Models\\xxx_nohq.paa", ""), (2, "#(argb,8,8,3)color(0.5,0.5,0.5,1,DT)", ""),
-                    (3, "#(argb,8,8,3)color(0,0,0,0,MC)", ""), (4, "A3_female_heads\\Models\\xxx_as.paa", ""),
+''' for n, t, e in ((1, PREFIX + "data\\mhfh_face_nohq.paa", ""), (2, "#(argb,8,8,3)color(0.5,0.5,0.5,1,DT)", ""),
+                    (3, "#(argb,8,8,3)color(0,0,0,0,MC)", ""), (4, PREFIX + "data\\mhfh_face_as.paa", ""),
                     (5, "#(argb,8,8,3)color(0,0,0.5,1,SMDI)", ""), (6, "#(ai,64,64,1)fresnel(0.5,0.2)", ""),
                     (7, "a3\\data_f\\env_co.paa", '    useWorldEnvMap = "true";\n')))
 # arms and legs: the same shader and settings as the face, so they have the same tone where they meet
 # (the game's own material for them is the "Skin" shader, which turns the same texture clearly more orange)
-RVMAT_HL = RVMAT.replace("m_ti_ca.paa", "hl_ti_ca.paa").replace("A3_female_heads\\Models\\xxx_nohq.paa", "a3\\characters_f\\heads\\data\\hl_muscular_nohq.paa") \
-    .replace("A3_female_heads\\Models\\xxx_as.paa", "a3\\characters_f\\heads\\data\\hl_muscular_as.paa")
+RVMAT_HL = RVMAT.replace("m_ti_ca.paa", "hl_ti_ca.paa").replace(PREFIX + "data\\mhfh_face_nohq.paa", "a3\\characters_f\\heads\\data\\hl_muscular_nohq.paa") \
+    .replace(PREFIX + "data\\mhfh_face_as.paa", "a3\\characters_f\\heads\\data\\hl_muscular_as.paa")
 assert RVMAT_HL.count("hl_") == 3
 
 
@@ -510,7 +510,7 @@ def write_config():
     def fname(c, style="", tac=False):
         return f'mhfh_{c["id"]}{"_" + style if style else ""}{"_tac" if tac else ""}'
 
-    heads = "".join(f'''    class {cls(c, s)}: bun_female_bun_01 {{
+    heads = "".join(f'''    class {cls(c, s)}: MHF_Head_Base {{
         model = "\\{PREFIX}models\\{fname(c, s)}.p3d";
     }};
 ''' for c in CHARS for s in styles(c))
@@ -527,7 +527,7 @@ def write_config():
                 links += "            mhfh_hairStyles[] = {" + ", ".join(f'"{k or "bun"}", "{cls(c, k, tac)}"' for k in styles(c)) + "};\n"
                 # the same face with and without face paint, for the camo cream action (addons/camo)
                 links += f'            mhfh_plainFace = "{cls(c, s)}";\n' if tac else f'            mhfh_camoFace = "{cls(c, s, True)}";\n'
-                faces += f'''        class {cls(c, s, tac)}: B_female_bun_01 {{
+                faces += f'''        class {cls(c, s, tac)}: Default {{
             author = "Miss Heda";
             disabled = 0;
             displayName = "{c["name"]} ({STYLES[s]}{", Tactical" if tac else ""})";
@@ -542,39 +542,46 @@ def write_config():
             materialHL2 = "{D}mhfh_hl.rvmat";
 {links}        }};
 '''
-    # The four Timberwolf faces under names of the same kind. Their own classes (B_female_bun_01..04) stay as they
-    # are for everything that uses them, but are taken out of the face lists, so every face shows once.
+    # The four Timberwolf faces under names of the same kind, complete in this mod (Timberwolf is not needed).
+    # When Timberwolf is loaded too, addons/compat_tftw takes its own classes out of the face lists.
     # With the braid they are their own face on their own head (not reshaped), with only the hair changed.
     # Their Tactical versions wear the face paint of the other characters, laid over their plain face: so they
     # come from their plain class (its head, arms and legs) with another texture.
     by_id = {o["id"]: o for o in ORIGINALS}
-    heads += "".join(f'''    class {original_head_class(by_id[i])}: bun_female_bun_01 {{
+    heads += "".join(f'''    class {original_head_class(by_id[i])}: MHF_Head_Base {{
         model = "\\{PREFIX}models\\{original_head(by_id[i])}.p3d";
     }};
-    class MHF_Female_{by_id[i]["name"]}_Bun: bun_female_bun_01 {{
+    class MHF_Female_{by_id[i]["name"]}_Bun: MHF_Head_Base {{
         model = "\\{PREFIX}models\\mhfh_{i}.p3d";
     }};
 ''' for i in ORIGINAL_HEADS)
-    theirs = "".join(f'''        class B_female_bun_0{n}: Default {{
-            disabled = 1;
-        }};
-''' for n in range(1, 5))
+    theirs = ""
     for o in ORIGINALS:
         for tac in (False, True):
             who = o["name"]; t = "_Tactical" if tac else ""
             both = f'''            mhfh_hairStyles[] = {{"bun", "MHF_Female_{who}_Bun{t}", "braid", "MHF_Female_{who}_Braid{t}"}};
             {"mhfh_plainFace" if tac else "mhfh_camoFace"} = "MHF_Female_{who}_%s{"" if tac else "_Tactical"}";
 '''
-            bun_tex = f'            author = "Miss Heda";\n            texture = "{D}{fname(o, "", True)}_co.paa";\n' if tac else ""
-            theirs += f'''        class MHF_Female_{who}_Bun{t}: B_female_bun_0{o["base"]} {{
+            # their own look, all from files of this mod: our copy of their plain face (also in the bun model),
+            # the face material, their arms and legs (copied from Timberwolf, see tools/ref_tftw.py)
+            look = f'''            author = "Miss Heda";
+            material = "{D}mhfh_face.rvmat";
+            materialWounded1 = "{D}mhfh_face.rvmat";
+            materialWounded2 = "{D}mhfh_face.rvmat";
+            textureHL = "{D}mhfh_tftw_hl_co.paa";
+            materialHL = "{D}mhfh_tftw_hl.rvmat";
+            textureHL2 = "{D}mhfh_tftw_hl_co.paa";
+            materialHL2 = "{D}mhfh_tftw_hl.rvmat";
+'''
+            bun_tex = f'            texture = "{D}{fname(o, "", tac)}_co.paa";\n'
+            theirs += f'''        class MHF_Female_{who}_Bun{t}: Default {{
             disabled = 0;
             displayName = "{who} (Bun{", Tactical" if tac else ""})";
             head = "MHF_Female_{who}_Bun";
-{bun_tex}            mhfh_braidFace = "MHF_Female_{who}_Braid{t}";
+{look}{bun_tex}            mhfh_braidFace = "MHF_Female_{who}_Braid{t}";
 {both % "Bun"}        }};
-        class MHF_Female_{who}_Braid{t}: B_female_bun_0{o["base"]} {{
-            author = "Miss Heda";
-            disabled = 0;
+        class MHF_Female_{who}_Braid{t}: Default {{
+{look}            disabled = 0;
             displayName = "{who} (Braid{", Tactical" if tac else ""})";
             head = "{original_head_class(o)}";
             texture = "{D}{fname(o, "braid", tac)}_co.paa";
@@ -589,13 +596,18 @@ class CfgPatches {{
         units[] = {{}};
         weapons[] = {{}};
         requiredVersion = 2.18;
-        requiredAddons[] = {{"mhfh_main", "A3_Characters_F", "A3_Characters_F_Heads", "female3_ICEMAN"}};
+        requiredAddons[] = {{"mhfh_main", "A3_Characters_F", "A3_Characters_F_Heads"}};
     }};
 }};
 
 // New characters on the Task Force Timberwolf female head: reshaped copies of that model with new face textures.
+// Everything the heads need is in this mod: Timberwolf itself does not have to be loaded.
 class CfgHeads {{
-    class bun_female_bun_01;
+    class DefaultHead_A3;
+    class MHF_Head_Base: DefaultHead_A3 {{
+        selectionHeadWound = "injury_head";
+        selectionPersonality = "personality";
+    }};
 {heads}}};
 
 class CfgFaces {{

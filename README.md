@@ -2,13 +2,13 @@
 
 Female faces for Arma 3 on the head of
 [Task Force Timberwolf Female Characters](https://steamcommunity.com/sharedfiles/filedetails/?id=2021778690) (Iceman).
+Standalone: Timberwolf does not have to be loaded.
 Steam Workshop: [3840043520](https://steamcommunity.com/sharedfiles/filedetails/?id=3840043520)
 
 ![preview](docs/preview.jpg)
 
 ## Requirements
 
-- Task Force Timberwolf Female Characters (`female3_ICEMAN`)
 - CBA_A3
 - ACE3 (optional): self interaction Equipment > Face
 
@@ -27,7 +27,8 @@ Steam Workshop: [3840043520](https://steamcommunity.com/sharedfiles/filedetails/
 | Novak | light brown | medium | hazel |
 | Carter, Medrano | Timberwolf faces | | |
 
-`B_female_bun_01`..`04` stay valid but are hidden from face lists (`disabled = 1`).
+With Timberwolf loaded as well, its own classes `B_female_bun_01`..`04` stay valid but are hidden from face lists
+(`disabled = 1`, optional addon `mhfh_compat_tftw`).
 
 ## Settings (CBA, "MH Female Heads")
 
