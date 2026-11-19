@@ -26,3 +26,11 @@ workshop = [
     "2021778690", # Task Force Timberwolf Female Characters (optional, not needed)
     "3499977893", # Advanced Developer Tools
 ]
+
+# Without Timberwolf: the mod has to work on its own (hemtt launch standalone)
+[hemtt.launch.standalone]
+workshop = [
+    "450814997",  # CBA_A3
+    "463939057",  # ACE3
+    "3499977893", # Advanced Developer Tools
+]
